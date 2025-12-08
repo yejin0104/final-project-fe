@@ -7,11 +7,12 @@ import Content from "./components/Content"
 // Jotai 개발자 도구 설정
 import "jotai-devtools/styles.css"; // 디자인
 import { DevTools } from "jotai-devtools"; // 도구
+import { Map, MapMarker } from "react-kakao-maps-sdk";
 
 function App() {
-
   return (
     <>
+      
       <BrowserRouter>
             {/* Jotai에서 제공하는 데이터 공유 영역(생략시 전체 앱에 적용됨) */}
             {/* <Provider> */}
