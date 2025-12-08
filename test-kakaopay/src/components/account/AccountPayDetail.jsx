@@ -73,7 +73,7 @@ export default function AccountPayDetail() {
             showCancelButton: true,
             confirmButtonColor : "#0984e3",
             cancelButtonColor : "#d63031",
-            confirmButtonText : "Cancel",
+            confirmButtonText : "Unit Cancel",
             cancelButtonText : "No Cancel",
             allowOutsideClick: false,
         });
