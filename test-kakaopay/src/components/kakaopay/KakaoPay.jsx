@@ -100,6 +100,21 @@ export default function KakaoPay() {
 
     }, [checkedGiftcardList]);
 
+     const numberWithComma = useCallback((x) => {
+        if (x === null || x === undefined || x === '') {
+            return '';
+        }
+
+        const numString = String(x);
+
+        const parts = numString.split('.');
+        const integerPart = parts[0];
+        const decimalPart = parts.length > 1 ? '.' + parts[1] : '';
+
+        const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return formattedInteger + decimalPart;
+    }, []);
+
     return (<>
 
         <Jumbotron subject="카카오페이 결제" detail="무엇을 살지 정해야 함" />
@@ -138,12 +153,12 @@ export default function KakaoPay() {
                                             checked={giftcard.check} onChange={changeGiftcardCheck} />
                                     </td>
                                     <td>{giftcard.giftcardName}</td>
-                                    <td>{giftcard.giftcardPrice}</td>
-                                    <td>{giftcard.giftcardPoint}</td>
+                                    <td>{numberWithComma(giftcard.giftcardPrice)}</td>
+                                    <td>{numberWithComma(giftcard.giftcardPoint)}</td>
                                     <td>
                                         <input type="number" inputMode="numeric"
                                             className="form-control" min={1}
-                                            value={giftcard.qty}
+                                            value={numberWithComma(giftcard.qty)}
                                             disabled={giftcard.check === false}
                                             onChange={e => changeGiftcardQty2(e, giftcard)} />
                                     </td>
@@ -157,10 +172,10 @@ export default function KakaoPay() {
 
         <div className="row mt-4">
             <div className="col fs-2">
-                {checkedGiftcardList.length}개의 상품권
+                {numberWithComma(checkedGiftcardList.length)}개의 상품권
             </div>
             <div className="col text-end fs-2">
-                금액:{checkedTotal}원
+                금액:{Number.isNaN(checkedTotal)? "0" : numberWithComma(checkedTotal)}원
             </div>
         </div>
 

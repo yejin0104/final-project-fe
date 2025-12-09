@@ -13,7 +13,7 @@ export default function AccountPayInformation() {
     }, []);
 
     const loadData = useCallback(async () => {
-        
+
         const { data } = await axios.get("/payment/account");
         setPaymentList(data);
     }, []);
@@ -24,6 +24,22 @@ export default function AccountPayInformation() {
         if (paymentRemain === 0) return "결제 전체 취소";
         return "결제 부분 취소";
     }, []);
+
+    const numberWithComma = useCallback((x) => {
+        if (x === null || x === undefined || x === '') {
+            return '';
+        }
+
+        const numString = String(x);
+
+        const parts = numString.split('.');
+        const integerPart = parts[0];
+        const decimalPart = parts.length > 1 ? '.' + parts[1] : '';
+
+        const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return formattedInteger + decimalPart;
+    }, []);
+
 
     return (<>
 
@@ -44,14 +60,14 @@ export default function AccountPayInformation() {
                 <div className="col">
                     <div className="p-4 shadow rounded">
                         <h2>{payment.paymentName}</h2>
-                        <div>거래금액 : 총 {payment.paymentTotal} 원</div>
+                        <div>거래금액 : 총 {numberWithComma(payment.paymentTotal)}원</div>
                         <div>거래번호 : {payment.paymentTid}</div>
                         <div>거래일시 : {payment.paymentTime}</div>
                         <div>상태 : {calculateStatus(payment)}</div>
                         <div className="mt-2 text-end">
                             <Link to={`/kakaopay/pay/detail/${payment.paymentNo}`} className="btn btn-info">자세히 보기 <FaArrowRight /></Link>
                             {/* /kakaopay/pay/detail */}
-                       </div>
+                        </div>
                     </div>
                 </div>
             </div>
