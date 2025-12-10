@@ -89,22 +89,22 @@ div {
   /* 가상요소가 삐져나오는 것 방지 */
 }
 
-.kakao-bg::before{
+
+.kakao-bg::after {
   content: "";
   position: absolute;
   inset: 0;
   z-index: 0;
   /* 모든 요소 위로 */
 
-  background-image: url("/images/1801287.sv.svg");
-  background-repeat: repeat;
+  background-image: url("/images/pay-logo.svg");
+  background-repeat: round;
   background-size: 490px 179px;
   /* 단위 꼭 붙이기 */
 
   opacity: 0.05;
   pointer-events: none;
 }
-
 
 /* 내용은 가상요소 위에 나오도록 */
 .kakao-bg>* {
@@ -119,6 +119,13 @@ div {
   font-size: 1.3rem;
 }
 
+hr {
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+}
 
 
 

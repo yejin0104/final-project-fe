@@ -9,12 +9,12 @@ import axios from "axios";
 axios.defaults.baseURL = "http://localhost:8080";
 axios.defaults.timeout = 10000
 
-// axios interceptor
-// axios.interceptors.request.use((config) => {
-//     // config.headers["Frontend-Url"] = window.location.href;
-
-//     // return config;
-// });
+//axios interceptor
+// - 서버로 요청을 보낼 때 "Frontend-Url" 이름으로 현재 URL을 전송 (카카오페이 결제 등에서 사용)
+axios.interceptors.request.use((config)=>{//config는 axios 설정
+    config.headers["Frontend-Url"] = window.location.href;
+    return config;
+})
 
 // axios.interceptors.response.use((response) => {
 //     // const newAccessToken = response.headers["access-token"];//response의 header를 조사 (* 소문자로 작성)

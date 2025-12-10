@@ -1,0 +1,18 @@
+.custom-overlay {
+    position: relative;
+}
+.custom-overlay-popup {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    border: 1px solid gray;
+    background-color: white;
+    padding: 1em;
+    border-radius: 0.5em;
+    z-index: 99999;
+}
+.custom-overlay:hover > .custom-overlay-popup {
+    display: block;
+}

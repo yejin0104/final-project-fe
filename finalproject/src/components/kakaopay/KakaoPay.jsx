@@ -102,7 +102,7 @@ export default function KakaoPay() {
 
     }, [checkedGiftcardList]);
 
-     const numberWithComma = useCallback((x) => {
+    const numberWithComma = useCallback((x) => {
         if (x === null || x === undefined || x === '') {
             return '';
         }
@@ -183,7 +183,7 @@ export default function KakaoPay() {
                 {numberWithComma(checkedGiftcardList.length)}개의 상품권
             </div>
             <div className="col text-end fs-2">
-                금액:{Number.isNaN(checkedTotal) ? "0" : numberWithComma(checkedTotal)}원
+                금액:{numberWithComma(checkedTotal)}원
             </div>
         </div>
 

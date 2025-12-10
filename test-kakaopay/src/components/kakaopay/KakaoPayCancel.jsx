@@ -1,18 +1,18 @@
-import { Link } from "react-router-dom";
-import Jumbotron from "../templates/Jumbotron";
-import "./KakaoPay.css";
-
+import { useNavigate } from "react-router-dom";
+import KakaoPayLayout from "./KakaoPayLayout";
 
 export default function KakaoPayCancel() {
+    const navigate = useNavigate();
 
-    return (<>
+    return (
+        <KakaoPayLayout title="결제가 취소되었습니다">
+            <p>사용자 요청에 의해 결제가 취소되었습니다.</p>
+            <p>필요 시 다시 결제를 진행할 수 있습니다.</p>
 
-        <Jumbotron subject="Final-Project-2조" detail="카카오결제 취소" />
 
-        <div className="row mt-4">
-            <div className="col">
-                <Link to="/" className="none-decortion">홈</Link>
-            </div>
-        </div>
-    </>)
+            <button className="kakao-button" onClick={() => navigate("/")}>
+                확인
+            </button>
+        </KakaoPayLayout>
+    );
 }
