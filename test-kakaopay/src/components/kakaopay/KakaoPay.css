@@ -78,7 +78,7 @@ div {
   /* 원하는 배경 */
   display: block;
   /* 필요하면 레이아웃 직접 선언 */
-   z-index: 0;
+  z-index: 0;
 }
 
 .kakao-bg {
@@ -88,20 +88,23 @@ div {
   overflow: hidden;
   /* 가상요소가 삐져나오는 것 방지 */
 }
+
 .kakao-bg::before,
-.kakao-bg::after  {
-   content: "";
-    position: absolute;
+.kakao-bg::after {
+  content: "";
+  position: absolute;
   inset: 0;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 0; /* 모든 요소 위로 */
-  
+  z-index: 0;
+  /* 모든 요소 위로 */
+
   background-image: url("/images/pay-logo.svg");
   background-repeat: repeat;
-  background-size: calc(57px * 8 + 35px) calc(18px * 8 + 35px); /* 단위 꼭 붙이기 */
+  background-size: calc(57px * 8 + 35px) calc(18px * 8 + 35px);
+  /* 단위 꼭 붙이기 */
 
   opacity: 0.05;
   pointer-events: none;
@@ -109,7 +112,7 @@ div {
 
 /* 내용은 가상요소 위에 나오도록 */
 .kakao-bg>* {
- position: relative;
+  position: relative;
 }
 
 
@@ -173,6 +176,6 @@ div {
   /* 내부 스크롤 */
   /* iPhone 홈바 같은 안전영역 고려 */
   padding-bottom: calc(var(--panel-padding) + env(safe-area-inset-bottom));
-  
+
   z-index: 30;
 }
