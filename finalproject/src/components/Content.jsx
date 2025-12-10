@@ -9,8 +9,11 @@ import KakaoPayFail from "./kakaopay/KakaoPayFail";
 {/* 카카오페이 결제 내역 */ }
 import AccountPayInformation from "./account/AccountPayInformation";
 import AccountPayDetail from "./account/AccountPayDetail";
-import AccountJoin from "./account/AccountJoin";
 {/* 카카오페이 결제 내역 */ }
+{/* 회원 관련 */ }
+import AccountJoin from "./account/accountJoin/AccountJoin";
+
+
 
 
 export default function Content() {
