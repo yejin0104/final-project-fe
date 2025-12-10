@@ -101,7 +101,8 @@ export default function KakaoPay() {
 
     }, [checkedGiftcardList]);
 
-    const numberWithComma = useCallback((x) => {
+
+     const numberWithComma = useCallback((x) => {
         if (x === null || x === undefined || x === '') {
             return '';
         }

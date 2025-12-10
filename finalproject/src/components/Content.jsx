@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import KakaoMapTest from "./kakaomap/KakaoMapTest";
+import TestDnd from "./dnd/TestDnd";
 
 
 
@@ -12,6 +13,7 @@ export default function Content(){
                     {/* 메인 페이지 */}
                     {/* <Route path="/" element={<Home/>}></Route> */}
                     <Route path="kakaotest" element={<KakaoMapTest/>}></Route>
+                    <Route path="testdnd" element={<TestDnd/>}></Route>
                 </Routes>
             </div>
         </div>
