@@ -101,7 +101,7 @@ export default function KakaoPay() {
         navigate(data.next_redirect_pc_url);
 
     }, [checkedGiftcardList]);
-  
+
     const numberWithComma = useCallback((x) => {
         if (x === null || x === undefined || x === '') {
             return '';
@@ -154,6 +154,7 @@ export default function KakaoPay() {
                                         <input type="checkbox" value={giftcard.giftcardNo}
                                             checked={giftcard.check} onChange={changeGiftcardCheck} />
                                     </td>
+
                                     <td className="checkbox-cell">
                                         {giftcard.giftcardName}
                                     </td>
