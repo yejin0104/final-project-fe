@@ -119,80 +119,99 @@ export default function KakaoPay() {
 
     return (<>
 
-        <Jumbotron subject="카카오페이 결제" detail="무엇을 살지 정해야 함" />
+        <div
+            className="fade-jumbotron"
+            style={{ animationDelay: `${0.03}s` }}
+        >
+            <Jumbotron subject="카카오페이 결제" detail="무엇을 살지 정해야 함" />
+        </div>
 
-        <div className="row my-4">
-            <div className="col-6 text-center">
-                <Link to="/kakaopay/pay/info" className="none-decortion">결제 내역 보기</Link>
-            </div>
-            <div className="col-6 text-center">
-                <Link to="/" className="none-decortion">홈</Link>
+        <div
+            className="fade-link"
+            style={{ animationDelay: `${0.03}s` }}
+        >
+            <div className="row my-4">
+                <div className="col-6 text-center">
+                    <Link to="/kakaopay/pay/info" className="none-decortion">결제 내역 보기</Link>
+                </div>
+                <div className="col-6 text-center">
+                    <Link to="/" className="none-decortion">홈</Link>
+                </div>
             </div>
         </div>
 
         <div className="row mt-4">
             <div className="col">
                 <div className="text-nowrap table-responsive">
-                    <table className="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>
-                                    <input type="checkbox"
-                                        checked={checkAll}
-                                        onChange={changeCheckAll} />
-                                </th>
-                                <th>이름</th>
-                                <th>금액</th>
-                                <th>포인트</th>
-                                <th width="100">수량</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {giftcardList.map(giftcard => (
-                                <tr key={giftcard.giftcardNo}>
-                                    <td className="checkbox-cell">
-                                        <input type="checkbox" value={giftcard.giftcardNo}
-                                            checked={giftcard.check} onChange={changeGiftcardCheck} />
-                                    </td>
-                                    <td className="checkbox-cell">
-                                        {giftcard.giftcardName}
-                                    </td>
-                                    <td className="checkbox-cell">
-                                        {numberWithComma(giftcard.giftcardPrice)}원
-                                    </td>
-                                    <td className="checkbox-cell">
-                                        {numberWithComma(giftcard.giftcardPoint)}포인트
-                                    </td>
-                                    <td className="checkbox-cell">
-                                        <input type="number" inputMode="numeric"
-                                            className="form-control" min={1}
-                                            value={numberWithComma(giftcard.qty)}
-                                            disabled={giftcard.check === false}
-                                            onChange={e => changeGiftcardQty2(e, giftcard)} />
-                                    </td>
+                    <div
+                        className="fade-item"
+                        style={{ animationDelay: `${0.03}s` }}
+                    >
+                        <table className="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <input type="checkbox"
+                                            checked={checkAll}
+                                            onChange={changeCheckAll} />
+                                    </th>
+                                    <th>이름</th>
+                                    <th>금액</th>
+                                    <th>포인트</th>
+                                    <th width="100">수량</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {giftcardList.map((giftcard) => (
+                                    <tr key={giftcard.giftcardNo}>
+                                        <td className="checkbox-cell">
+                                            <input type="checkbox" value={giftcard.giftcardNo}
+                                                checked={giftcard.check} onChange={changeGiftcardCheck} />
+                                        </td>
+                                        <td className="checkbox-cell">
+                                            {giftcard.giftcardName}
+                                        </td>
+                                        <td className="checkbox-cell">
+                                            {numberWithComma(giftcard.giftcardPrice)}원
+                                        </td>
+                                        <td className="checkbox-cell">
+                                            {numberWithComma(giftcard.giftcardPoint)}포인트
+                                        </td>
+                                        <td className="checkbox-cell">
+                                            <input type="number" inputMode="numeric"
+                                                className="form-control" min={1}
+                                                value={numberWithComma(giftcard.qty)}
+                                                disabled={giftcard.check === false}
+                                                onChange={e => changeGiftcardQty2(e, giftcard)} />
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div className="row mt-4">
-            <div className="col fs-2">
-                {numberWithComma(checkedGiftcardList.length)}개의 상품권
+        <div
+            className="fade-label"
+            style={{ animationDelay: `${0.03}s` }}
+        >
+            <div className="row mt-4">
+                <div className="col fs-2">
+                    {numberWithComma(checkedGiftcardList.length)}개의 상품권
+                </div>
+                <div className="col text-end fs-2">
+                    금액:{numberWithComma(checkedTotal)}원
+                </div>
             </div>
-            <div className="col text-end fs-2">
-                금액:{numberWithComma(checkedTotal)}원
+
+            <div className="row mt-4">
+                <div className="col text-end">
+                    <button className="btn btn-lg btn-outline-success" onClick={purchase}
+                        disabled={checkedGiftcardList.length === 0}>구매</button>
+                </div>
             </div>
         </div>
-
-        <div className="row mt-4">
-            <div className="col text-end">
-                <button className="btn btn-lg btn-outline-success" onClick={purchase}
-                    disabled={checkedGiftcardList.length === 0}>구매</button>
-            </div>
-        </div>
-
     </>)
 }

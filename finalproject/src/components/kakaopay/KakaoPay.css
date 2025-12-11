@@ -183,3 +183,68 @@ hr {
 
   z-index: 30;
 }
+
+/* 연출 */
+.fade-item {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-label {
+  opacity: 0;
+  transform: translateX(10px);
+  animation: fadeInRight 0.4s ease-out forwards;
+}
+
+@keyframes fadeInRight {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.fade-jumbotron {
+  opacity: 0;
+  transform: translateX(-10px);
+  animation: fadeInLeft 0.4s ease-out forwards;
+}
+
+@keyframes fadeInLeft {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.fade-link {
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: fadeInLink 0.4s ease-out forwards;
+}
+
+@keyframes fadeInLink {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.fade-kakaopage {
+  opacity: 0;
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+/* 연출 */

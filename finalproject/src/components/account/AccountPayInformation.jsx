@@ -4,6 +4,7 @@ import { FaArrowRight } from "react-icons/fa6";
 import { Link } from "react-router-dom";
 import Jumbotron from "../templates/Jumbotron";
 import "../kakaopay/KakaoPay.css";
+import "./AccountPay.css";
 
 export default function AccountPayInformation() {
     const [paymentList, setPaymentList] = useState([]);
@@ -43,30 +44,48 @@ export default function AccountPayInformation() {
 
     return (<>
 
-        <Jumbotron subject="내 카카오페이 결제 내역" detail=""></Jumbotron>
 
-        <div className="row my-4">
-            <div className="col-6 text-center">
-                <Link to="/kakaopay/buy" className="none-decortion">카카오페이 결제하기</Link>
-            </div>
-            <div className="col-6 text-center">
-                <Link to="/" className="none-decortion">홈</Link>
+        <div
+            className="fade-jumbotron"
+            style={{ animationDelay: `${0.03}s` }}
+        >
+            <Jumbotron subject="내 카카오페이 결제 내역" detail="내 카카오결제 내역을 알아봅니다."></Jumbotron>
+        </div>
+
+        <div
+            className="fade-link"
+            style={{ animationDelay: `${0.03}s` }}
+        >
+            <div className="row my-4">
+                <div className="col-6 text-center">
+                    <Link to="/kakaopay/buy" className="none-decortion">카카오페이 결제하기</Link>
+                </div>
+                <div className="col-6 text-center">
+                    <Link to="/" className="none-decortion">홈</Link>
+                </div>
             </div>
         </div>
 
+
         <hr />
-        {paymentList.map(payment => (
-            <div className="row mb-4" key={payment.paymentNo}>
-                <div className="col">
-                    <div className="p-4 shadow rounded">
-                        <h2>{payment.paymentName}</h2>
-                        <div>거래금액 : 총 {numberWithComma(payment.paymentTotal)}원</div>
-                        <div>거래번호 : {payment.paymentTid}</div>
-                        <div>거래일시 : {payment.paymentTime}</div>
-                        <div>상태 : {calculateStatus(payment)}</div>
-                        <div className="mt-2 text-end">
-                            <Link to={`/kakaopay/pay/detail/${payment.paymentNo}`} className="btn btn-outline-info">자세히 보기 <FaArrowRight /></Link>
-                            {/* /kakaopay/pay/detail */}
+        {paymentList.map((payment, i) => (
+            <div
+                key={i}
+                className="fade-item"
+                style={{ animationDelay: `${i * 0.03}s` }}
+            >
+                <div className="row mb-4" key={payment.paymentNo}>
+                    <div className="col">
+                        <div className="p-4 shadow rounded">
+                            <h2>{payment.paymentName}</h2>
+                            <div>거래금액 : 총 {numberWithComma(payment.paymentTotal)}원</div>
+                            <div>거래번호 : {payment.paymentTid}</div>
+                            <div>거래일시 : {payment.paymentTime}</div>
+                            <div>상태 : {calculateStatus(payment)}</div>
+                            <div className="mt-2 text-end">
+                                <Link to={`/kakaopay/pay/detail/${payment.paymentNo}`} className="btn btn-outline-info">자세히 보기 <FaArrowRight /></Link>
+                                {/* /kakaopay/pay/detail */}
+                            </div>
                         </div>
                     </div>
                 </div>
