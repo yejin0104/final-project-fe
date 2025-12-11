@@ -93,7 +93,7 @@ export default function AccountPayDetail() {
             className="fade-jumbotron"
             style={{ animationDelay: `${0.03}s` }}
         >
-            <Jumbotron subject="결제 상세 정보 조회" detail={`${paymentNo}`} 번 거래 내역 조회></Jumbotron>
+            <Jumbotron subject="결제 상세 정보 조회" detail={`${paymentNo}번 거래 상세 정보역 조회`}></Jumbotron>
         </div>
 
         <div
