@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import Jumbotron from "../templates/Jumbotron";
 import "../kakaopay/KakaoPay.css";
 import "./AccountPay.css";
+import { numberWithComma } from "../../utils/format";
 
 export default function AccountPayInformation() {
     const [paymentList, setPaymentList] = useState([]);
@@ -25,22 +26,6 @@ export default function AccountPayInformation() {
         if (paymentRemain === 0) return "결제 전체 취소";
         return "결제 부분 취소";
     }, []);
-
-    const numberWithComma = useCallback((x) => {
-        if (x === null || x === undefined || x === '') {
-            return '';
-        }
-
-        const numString = String(x);
-
-        const parts = numString.split('.');
-        const integerPart = parts[0];
-        const decimalPart = parts.length > 1 ? '.' + parts[1] : '';
-
-        const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        return formattedInteger + decimalPart;
-    }, []);
-
 
     return (<>
 

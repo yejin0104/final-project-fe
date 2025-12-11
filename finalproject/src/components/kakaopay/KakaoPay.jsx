@@ -3,6 +3,7 @@ import Jumbotron from "../templates/Jumbotron";
 import "./KakaoPay.css";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
+import { numberWithComma } from "../../utils/format";
 
 export default function KakaoPay() {
 
@@ -101,21 +102,6 @@ export default function KakaoPay() {
         navigate(data.next_redirect_pc_url);
 
     }, [checkedGiftcardList]);
-
-    const numberWithComma = useCallback((x) => {
-        if (x === null || x === undefined || x === '') {
-            return '';
-        }
-
-        const numString = String(x);
-
-        const parts = numString.split('.');
-        const integerPart = parts[0];
-        const decimalPart = parts.length > 1 ? '.' + parts[1] : '';
-
-        const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        return formattedInteger + decimalPart;
-    }, []);
 
     return (<>
 
