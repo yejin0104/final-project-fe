@@ -4,35 +4,54 @@ import Menu from "./components/Menu"
 import Footer from "./components/Footer"
 import Content from "./components/Content"
 
+
 // Jotai 개발자 도구 설정
 import "jotai-devtools/styles.css"; // 디자인
 import { DevTools } from "jotai-devtools"; // 도구
 import { Map, MapMarker } from "react-kakao-maps-sdk";
 import { Bounce, ToastContainer } from "react-toastify";
+import ServiceCenterButton from "./components/servicecenter/ServiceCenterButton"
+import ServiceCenterPopup from "./components/servicecenter/ServiceCenterPopup"
+import ChatSocket from "./components/servicecenter/ChatSocket"
+import useChat from "./utils/hooks/useChat"
 
-function App() {
+function App() { 
+  const { isPopupOpen, openPopup, closePopup, isChatOpen,
+          openChat, closeChat, chatNo, } = useChat();
+
   return (
     <>
-      
       <BrowserRouter>
-            {/* Jotai에서 제공하는 데이터 공유 영역(생략시 전체 앱에 적용됨) */}
-            {/* <Provider> */}
-                {/* 
-                    Jotai 개발자 도구 - 개발 모드에서만 작동하고 배포 시 자동으로 제거되어야 함
-                    process.env.NODE_ENV 정보를 읽었을 때 development면 개발모드, production이면 배포모드
-                */}
-                {process.env.NODE_ENV === "development" && <DevTools/>}
-                <Menu/>
-                <div className="container-fluid my-5 pt-5">
-                    <Content/>
-                    
-                    <hr />
-                    <Footer/>
-                </div>
-            {/* </Provider> */}
-        </BrowserRouter>
+        {/* Jotai 개발자 도구 */}
+        {process.env.NODE_ENV === "development" && <DevTools />}
 
-              {/* 토스트 메세지 컨테이너 */}
+        <Menu />
+        <div className="container-fluid my-5 pt-5">
+          <Content />
+
+          <hr />
+          <Footer />
+        </div>
+
+        {/* 고객센터 버튼 최상단에 배치 */}
+        <ServiceCenterButton onButtonClick={openPopup} />
+
+        {/* 팝업 열기 */}
+        {isPopupOpen && (
+          <ServiceCenterPopup
+            isOpen={isPopupOpen}
+            onClose={closePopup}
+            onChatConnect={openChat} // 팝업에서 채팅방 생성
+          />
+        )}
+
+        {/* 채팅방 모달 열기 */}
+        {isChatOpen && chatNo && ( // chatNo가 있을 때만 렌더링
+          <ChatSocket isChatOpen={isChatOpen} onChatClose={closeChat} currentChatNo={chatNo} />
+        )}
+      </BrowserRouter>
+
+      {/* 토스트 메세지 컨테이너 */}
       <ToastContainer
         position="bottom-right"
         autoClose={5000}

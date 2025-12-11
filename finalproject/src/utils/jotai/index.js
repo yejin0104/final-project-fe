@@ -27,6 +27,13 @@ export const adminState = atom(get => {
     return loginId?.length > 0 && loginLevel === "관리자";
 })
 
+//상담사인지 판정 
+export const counselorState = atom(get=>{
+    const loginId = get(loginIdState);
+    const loginLevel = get(loginLevelState);
+    return loginId?.length > 0 && loginLevel === "상담사";
+});
+
 export const clearLoginState = atom(null, (get,set)=>{
     set(loginIdState,"");
     set(loginLevelState,"");
@@ -37,6 +44,17 @@ export const clearLoginState = atom(null, (get,set)=>{
 // 로그인 판정이 완료되었는지 확인하기 위한 데이터
 export const loginCompleteState = atom(false);
 
+// 현재 접속한 방 ID (고객은 1개, 상담사는 여러 방 중 현재 포커스된 방)
+export const currentChatIdState = atom("");
+
+// 채팅방 ID를 키로 하여 메시지 리스트를 저장하는 맵 (Map) 형태의 상태
+// 예: { 'room123': [{ sender: 'customer', text: '안녕하세요' }, ...], ... }
+export const messagesByChatIdState = atom({});
+
+// WebSocket 연결 상태 (UI 표시용)
+// 예: 'connected', 'connecting', 'disconnected'
+export const wsConnectionState = atom("disconnected");
+
 // DevTools에서 확인하기 위한 이름 설정
 loginIdState.debugLabel = "loginIdState";
 loginLevelState.debugLabel = "loginLevelState";
@@ -45,3 +63,8 @@ accessTokenState.debugLabel = "accessTokenState";
 adminState.debugLabel = "adminState";
 loginCompleteState.debugLabel = "loginCompleteState";
 refreshTokenState.debugLabel = "refreshTokenState";
+
+counselorState.debugLabel = "counselorState";
+currentChatIdState.debugLabel = "currentChatIdState";
+messagesByChatIdState.debugLabel = "messagesByChatIdState";
+wsConnectionState.debugLabel = "wsConnectionState";
