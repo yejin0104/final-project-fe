@@ -38,6 +38,14 @@ export default function KakaoMapTest() {
             ],
         },
     });
+    const [mes, setMes] = useState({
+        "상담사ID" : {
+            content : []
+        },
+        "상담자ID" : {
+            content : []
+        }
+    })
     const [markerData, setMarkerData] = useState({
         /* 
             uuid-1 : {
@@ -60,6 +68,44 @@ export default function KakaoMapTest() {
         lng: 126.9780,
         lat: 37.5665,
     })
+
+    const [searchData, setSearchKeyword] = useState({
+        query : ""
+    })
+
+    const [searchList, setSearchList] = useState([
+        /*
+        {
+            addressName : "",
+            categoryGroupName : "",
+            phone : "",
+            placeName : "",
+            placeUrl : "",
+            roadAddressName : "",
+            x : "",
+            y : ""
+        }
+        */
+    ])
+
+    const [tempMarker, setTempMarker] = useState([
+        /*
+        {
+            x: double,
+            y: double,
+        }
+         */
+    ])
+
+    const addTempMarker = useCallback((latlng) => {
+        setTempMarker(prev => ([
+            ...prev,
+            {
+                x: latlng.getLng(),
+                y: latlng.getLat(),
+            }
+        ]))
+    }, [])
 
     const addMarker = useCallback(async (latlng) => {
         const id = uuidv4();
@@ -110,7 +156,31 @@ export default function KakaoMapTest() {
                 content: "메모영역"
             }
         }));
-    }, [days, selectedDay]);
+    }, [days, selectedDay, searchList]);
+
+    // 주소 검색
+    const addMarkerForSearch = useCallback(async (e)=>{
+        setSearchList([]);
+        const {data} = await axios.post("/kakaoMap/searchAddress", searchData);
+        // const {documents} = data;
+        // console.log(data);
+        data.map(element => {
+
+            setSearchList(prev => ([
+                ...prev,
+                {
+                    addressName : element.address_name,
+                    categoryGroupName : element.category_group_name,
+                    phone : element.phone,
+                    placeName : element.place_name,
+                    placeUrl : element.place_url,
+                    roadAddressName : element.road_address_name,
+                    x : element.x,
+                    y : element.y
+                }
+            ]))
+        })
+    }, [days, selectedDay, searchData]);
 
     // 마커 삭제
     const removeMarker = useCallback((id) => {
@@ -210,6 +280,36 @@ export default function KakaoMapTest() {
         />
         )));
     }, [markerData, selectedDay, days]);
+
+    const tempMarkerElements = useCallback(e=>{
+        const handleMarkerClick = (clickedMarker) => {
+        // 1. addMarker 함수 호출을 위한 customLatLng 객체 생성
+        const customLatLng = {
+            getLat: () => parseFloat(clickedMarker.y),
+            getLng: () => parseFloat(clickedMarker.x)
+        };
+
+        // 2. tempMarker 목록에서 클릭된 마커를 제거
+        setTempMarker(prevTempMarkers => {
+            // 클릭된 마커(clickedMarker)와 x, y 좌표가 모두 일치하지 않는
+            // 마커들만 필터링하여 새로운 배열을 만듭니다.
+            const newTempMarkers = prevTempMarkers.filter(
+                (marker) => !(marker.x === clickedMarker.x && marker.y === clickedMarker.y)
+            );
+            return newTempMarkers;
+        });
+
+        // 3. addMarker 함수 호출 (주요 로직 수행)
+        return addMarker(customLatLng);
+    };
+        return (tempMarker?.map((marker, index) => (
+        <MapMarker
+            key={index}
+            position={{ lng: marker.x, lat: marker.y  }}
+            onClick={e=>handleMarkerClick(marker)}
+        />
+        )));
+    }, [tempMarker]);
 
     const PRIORITY_COLORS = {
         "RECOMMEND": "#0052FF",
@@ -371,6 +471,11 @@ export default function KakaoMapTest() {
         console.log(data);
     }, [days, markerData])
 
+    const changeStrValue = useCallback((e) => {
+        const {name, value} = e.target;
+        setSearchKeyword(prev => ({ ...prev, [name]: value }));
+    }, [])
+
     // polyline을 가져와서 사용하기 위한 Effect
     useEffect(() => {
         const routes = days[selectedDay]?.routes;
@@ -417,6 +522,7 @@ export default function KakaoMapTest() {
                 >
 
                 {markerElements()}
+                {tempMarkerElements()}
                 {polylineElements()}
                 </Map>
                 <div className="marker-list">
@@ -461,6 +567,34 @@ export default function KakaoMapTest() {
                     <button type="button" className="btn btn-secondary ms-1" name="DISTANCE" onClick={selectType}>최단길이</button>
                     <button type="button" className="btn btn-secondary ms-1" onClick={sendData}>데이터 전송</button>
                 </div>
+                <div className="row mt-2">
+                    <label className="col-sm-3 col-form-label">
+                        <span>주소</span>
+                    </label>    
+                    <div className="col-sm-9 d-flex">
+                        <input className="form-control flex-grow-1 w-auto" name="query" value={searchData.query} onChange={changeStrValue}/>
+                        <button className="btn btn-secondary" onClick={addMarkerForSearch}>검색</button>
+                    </div>
+                </div>
+                {searchList?.map((list,index) => {
+                    const customLatLng = {
+                            getLat: () => parseFloat(list.y),
+                            getLng: () => parseFloat(list.x)
+                        };
+                    return (
+                    <div className="row mt-1 border shadow" key={index}>
+                        <div className="col" onClick={() => addTempMarker(customLatLng)}>
+                            <p>매장명 : {list.placeName}</p>
+                            <p>주소 : {list.addressName}</p>
+                            <p>도로명 주소 : {list.roadAddressName}</p>
+                            <p>업종 : {list.categoryGroupName}</p>
+                            <p>전화번호 : {list.phone}</p>
+                            <p>매장 홈페이지 : {list.placeUrl}</p>
+                        </div>
+                    </div>
+                    )
+                    }
+                )} 
             </div>
         </>
     )

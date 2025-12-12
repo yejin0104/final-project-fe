@@ -52,7 +52,7 @@ export default function MarkerListSection({ markerIds, routes, markerData, setDa
 
     const changeStrValue = useCallback((e, id) => {
         const {name, value} = e.target;
-        console.log(`name = ${name} || value = ${value} || id = ${id}`);
+        // console.log(`name = ${name} || value = ${value} || id = ${id}`);
         setMarkerData(prev =>({
             ...prev,
             [id] : {
@@ -68,8 +68,8 @@ export default function MarkerListSection({ markerIds, routes, markerData, setDa
         const prevId = markerIds[index - 1];
         const nextId = markerIds[index + 1];
 
-        const prevKey = prevId ? `${prevId}-${id}` : null;
-        const nextKey = nextId ? `${id}-${nextId}` : null;
+        const prevKey = prevId ? `${prevId}##${id}` : null;
+        const nextKey = nextId ? `${id}##${nextId}` : null;
 
         const durationForMarker = {
             prev: prevKey ? routes.find(route => route.routeKey === prevKey)?.duration : null,
