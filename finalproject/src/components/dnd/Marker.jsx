@@ -64,7 +64,7 @@ export const Marker = memo(function Marker({
                                 <div><span>{duration?.next}초</span></div>
                             )}
                             {/* <div><span>이전거리 {distance?.prev?.RECOMMEND}</span></div> */}
-                            {duration?.next > 0 && (
+                            {distance?.next > 0 && (
                                 <div><span>{distance?.next}미터</span></div>
                             )}
                         </div>

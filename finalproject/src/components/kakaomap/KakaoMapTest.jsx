@@ -19,7 +19,7 @@ export default function KakaoMapTest() {
             routes : [
                 /*
                 {
-                        routeKey : uuid1-uuid2,
+                        routeKey : uuid1##uuid2,
                         priority : "RECOMMEND", "TIME", "DISTANCE",
                         distance: int,
                         duration: int,
@@ -28,7 +28,7 @@ export default function KakaoMapTest() {
                 },
                 {
                     
-                        routeKey : uuid2-uuid3,
+                        routeKey : uuid2##uuid3,
                         priority : "RECOMMEND", "TIME", "DISTANCE",
                         distance: int,
                         duration: int,
@@ -131,11 +131,11 @@ export default function KakaoMapTest() {
                 const { routeKey } = segment;
                 
                 // 삭제하려는 마커 ID가 routeKey의 시작점 또는 끝점인지 확인합니다.
-                // 1. key.startsWith(id + '-') : 이 경로의 시작 마커가 삭제될 마커인 경우
-                // 2. key.endsWith('-' + id)   : 이 경로의 끝 마커가 삭제될 마커인 경우
+                // 1. key.startsWith(id + '##') : 이 경로의 시작 마커가 삭제될 마커인 경우
+                // 2. key.endsWith('##' + id)   : 이 경로의 끝 마커가 삭제될 마커인 경우
                 
                 // 해당 segment가 삭제된 마커 ID를 포함하고 있으면 (true) -> 필터링에서 제외(false)
-                if (routeKey.startsWith(id + '-') || routeKey.endsWith('-' + id)) {
+                if (routeKey.startsWith(id + '##') || routeKey.endsWith('##' + id)) {
                     return false; // 이 경로는 제거
                 }
                 return true; // 이 경로는 유지
@@ -260,7 +260,7 @@ export default function KakaoMapTest() {
                 
                 const startId = days[selectedDay].markerIds[0]; // 마커 ID
                 const endId = days[selectedDay].markerIds[1]; // 마커 ID
-                const routeKey = `${startId}-${endId}`;
+                const routeKey = `${startId}##${endId}`;
 
                 // Polyline 좌표 데이터 생성
                 const linepath = [];
@@ -311,7 +311,7 @@ export default function KakaoMapTest() {
             sections.map(({roads, duration, distance}, index) => {
                 const fromId = days[selectedDay].markerIds[index];
                 const toId = days[selectedDay].markerIds[index+1];
-                const key = `${fromId}-${toId}`;
+                const key = `${fromId}##${toId}`;
 
                 const linepath = [];
                 roads.forEach(({vertexes}) => {
