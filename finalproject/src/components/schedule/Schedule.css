@@ -1,0 +1,102 @@
+
+.map-area{
+    position: relative;
+    height: 800px;
+    background-color: lightblue;
+}
+
+
+.group {
+
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: white;
+      border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 1px 10px rgba(0,0,0,.2);
+  z-index: 999;
+
+    
+}
+
+.schedule-list {
+
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 260px;
+  background: white;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.2);
+  z-index: 999;
+
+}
+
+.schedule-item{
+    border-bottom: 1px solid #dfe6e9;
+    padding: 10px 0;
+}
+
+.day-divider {
+
+    background-color: #b2bec3;
+    width: 100%;
+    padding: 1px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.member-img {
+
+    border-radius: 50%;
+    width: 70%;
+}
+
+.divider {
+
+width: 98%;
+margin: 35px auto;
+
+}
+
+.m-110 {
+    margin-left: 110px;
+}
+
+.card-area {
+border: 2px solid #dee2e6;
+  border-radius: 12px;
+  background-color: #fff; 
+}
+.schedule-img {
+    position: relative;
+}
+.schedule-state {
+    position: absolute;
+    top: 8px;
+    right: 18px;
+}
+
+.banner-img{
+    height: 100px;
+    width: 100%;
+}
+
+.slider-img {
+    width: 230px;
+    height: 260px;
+    border-radius: 10px;
+    background-color: white;
+
+}
+
+.slider-img.down {
+    margin-top: 60px;
+}
+
+.today {
+    font-weight: bolder;
+
+}
