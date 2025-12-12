@@ -10,7 +10,7 @@ export default function Schedule() {
     const location = useLocation();
     const isSearch = location.pathname.endsWith("/shearch");
 
-
+    
 
     return (<>
 

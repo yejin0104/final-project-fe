@@ -56,8 +56,10 @@
 
 .divider {
 
-width: 98%;
-margin: 35px auto;
+  border: 0;
+  border-top: 1px solid #dee2e6;
+  opacity: 1;
+  margin: 1rem 0;
 
 }
 

@@ -21,6 +21,7 @@ export default function Reply() {
   const [hoverIndex, setHoverIndex] = useState(null);
   const [showReviewUnitList, setShowReviewUnitList] = useState([]);
 
+
     const cleanData = useCallback(() => {
       setInput("");
       setAccountName("");
@@ -33,7 +34,7 @@ export default function Reply() {
 
     try {
       const { data } = await axios.get(`http://localhost:8080/review/list/${scheduleNo}`);
-
+      console.log(data);
       setReplyList(data);
 
     } catch (error) {
@@ -45,7 +46,6 @@ export default function Reply() {
 
     try {
       const { data } = await axios.get(`http://localhost:8080/review/list/${scheduleNo}/unit`);
-      console.log(data[1].scheduleUnitNo);
       setShowUnitList(data);
 
     } catch (error) {
@@ -55,7 +55,7 @@ export default function Reply() {
   useEffect(() => {
     loadReplyList();
     loadScheduleUnitList();
-  }, []);
+  }, [scheduleNo]);
 
   async function loadReviewUnitList(reviewNo) {
     console.log("숫자"+reviewNo)
@@ -63,8 +63,6 @@ export default function Reply() {
     console.log(data);
     setShowReviewUnitList(data);
   }
-
-
 
   const sendData = useCallback(async () => {
 
@@ -80,6 +78,7 @@ export default function Reply() {
       setAccountName(data.reviewWriterNickname);
     loadReplyList();
     loadScheduleUnitList();
+    setScheduleUnitList([]);
 
     } catch (error) {
 
@@ -87,10 +86,18 @@ export default function Reply() {
 
   }, [scheduleNo, scheduleUnitList, input, replyList])
 
-  const deleteScheduleUnitNo = useCallback(async (scheduleUnitNo)=>{
-    console.log(scheduleUnitNo);
-    await axios.delete(`http://localhost:8080/review/unit/${scheduleUnitNo}`);
-        loadReplyList();
+  const deleteScheduleUnitNo = useCallback(async (reviewNo,scheduleUnitNo)=>{
+    try {
+      await axios.delete(`http://localhost:8080/review/unit/${reviewNo}`, {
+        params : {scheduleUnitNo}
+      });
+      console.log(scheduleUnitNo);
+          loadReplyList();
+          toast.success("성공");
+
+    } catch (error) {
+      toast.error("실패");
+    }
     
   }, []);
 
@@ -108,7 +115,7 @@ export default function Reply() {
      });
      setEditReviewNo(null);
     loadReplyList();
-    loadScheduleUnitList();
+    loadReviewUnitList();
 
   }, [editReply]);
 
@@ -178,12 +185,14 @@ export default function Reply() {
                   <span className="ms-2">({reply.reviewWtime})</span>
                 </div> */}
                 <div className={`my-3 d-flex align-items-center `}>
-                  {showReviewUnitList.map((unit, index) => (
-                <span key={unit.scheduleUnitNo} 
+                  {reply.scheduleUnitNoList
+                  ?.filter((unitNo, index)=> unitNo)
+                  .map((unitNo, index) => (
+                <span key={unitNo} value={unitNo}
                 className={`border border-secondary p-1 rounded me-1 small ${hoverIndex === index && "bg-secondary text-white"}`}
-                  onClick={(e) => deleteScheduleUnitNo(unit.scheduleUnitNo)} 
+                  onClick={(e) => deleteScheduleUnitNo(reply.reviewNo,unitNo)} 
                   onMouseEnter={()=>setHoverIndex(index)} onMouseLeave={()=>setHoverIndex(null)}>
-                  {index + 1}번 일정<TiDelete/>
+                  {index + 1}번 일정 (#{unitNo})<TiDelete/>
                 </span>
               ))}
               </div>
@@ -203,10 +212,12 @@ export default function Reply() {
                   <span className="ms-2">({reply.reviewWtime})</span>
                 </div>
                 <div>
-                  {showunitList.map((unit, index) => (
-                <span key={unit.scheduleUnitNo} className="border border-secondary p-1 rounded me-1 small" value={unit.scheduleUnitNo}
+                  {reply.scheduleUnitNoList
+                   ?.filter((unitNo, index)=> unitNo)
+                  .map((unitNo, index) => (
+                <span key={unitNo} className="border border-secondary p-1 rounded me-1 small" value={unitNo}
                   onClick={(e) => checkScheduleUnitNo(e.target.value)}>
-                  {index + 1}번 일정
+                   {index + 1}번 일정 (#{unitNo})
                 </span>
               ))}
               </div>
@@ -221,10 +232,8 @@ export default function Reply() {
                 </>
               )}
 
-
-
               {/* 구분선 */}
-              <hr className="divider mt-3" />
+              <hr className="divider mt-3 " />
             </div>
 
           ))}
@@ -232,12 +241,18 @@ export default function Reply() {
           {/* 아래 일정 리스트 영역 */}
           <div className="row ">
             <div className="col m-110 d-flex gap-2 flex-wrap">
-              {showunitList.map((unit, index) => (
-                <button key={unit.scheduleUnitNo} className="btn btn-secondary small" value={unit.scheduleUnitNo}
-                  onClick={(e) => checkScheduleUnitNo(e.target.value)}>
-                  {index + 1}번 일정
+              {showunitList.map((unit, index) => {
+                const isSelect = scheduleUnitList.includes(unit.scheduleUnitNo);
+              return (
+                <button
+                type="button"
+                 key={unit.scheduleUnitNo} className={`btn small ${isSelect ? "btn-outline-secondary" : "btn-secondary"}`}
+                  onClick={() =>{ 
+                    checkScheduleUnitNo(unit.scheduleUnitNo)
+                    }} >
+                  {index + 1}번 일정 (#{unit.scheduleUnitNo})
                 </button>
-              ))}
+              )})}
             </div>
           </div>
           <div className="row mt-1">
