@@ -27,7 +27,7 @@ export default function AccountPayInformation() {
 
         const { data } = await axios.get("/payment/account")
         setPaymentList(data);
-    }, []);
+    }, [setPaymentList]);
 
     const calculateStatus = useCallback(payment => {
         const { paymentTotal, paymentRemain } = payment;

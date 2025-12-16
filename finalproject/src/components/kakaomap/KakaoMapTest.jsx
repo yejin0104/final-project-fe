@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Map, MapMarker, Polyline } from "react-kakao-maps-sdk";
 import KakaoLoader from "./useKakaoLoader";
 import {v4 as uuidv4} from "uuid";
@@ -38,14 +38,6 @@ export default function KakaoMapTest() {
             ],
         },
     });
-    const [mes, setMes] = useState({
-        "상담사ID" : {
-            content : []
-        },
-        "상담자ID" : {
-            content : []
-        }
-    })
     const [markerData, setMarkerData] = useState({
         /* 
             uuid-1 : {
@@ -56,6 +48,7 @@ export default function KakaoMapTest() {
                 content: string
         */
     })
+
     const [selectedDay, setSelectedDay] = useState(1)
     const [polyline, setPolyLine] = useState([]);
     const [selectedType, setSelectedType] = useState({
@@ -63,6 +56,7 @@ export default function KakaoMapTest() {
         TIME : false,
         DISTANCE : false
     })
+    const [selectedSearch, setSelectedSearch] = useState("CAR")
 
     const [center, setCenter] = useState({
         lng: 126.9780,
@@ -309,7 +303,7 @@ export default function KakaoMapTest() {
             onClick={e=>handleMarkerClick(marker)}
         />
         )));
-    }, [tempMarker]);
+    }, [tempMarker, markerData]);
 
     const PRIORITY_COLORS = {
         "RECOMMEND": "#0052FF",
@@ -321,7 +315,7 @@ export default function KakaoMapTest() {
         return (
             polyline
                 // 선택된 타입에 따라 필터링 (selectedType: { RECOMMEND: true, ... })
-                .filter(pl => selectedType[pl.priority]) 
+                // .filter(pl => selectedType[pl.priority])
                 .map((pl, idx) => (
                     <Polyline
                         key={idx}
@@ -329,24 +323,26 @@ export default function KakaoMapTest() {
                         strokeWeight={5}
                         strokeOpacity={0.7}
                         strokeStyle="solid"
-                        strokeColor={PRIORITY_COLORS[pl.priority]} 
+                        strokeColor={selectedType[pl.priority]? PRIORITY_COLORS[pl.priority]:"#4e4e4e"} 
+                        zIndex={selectedType[pl.priority]? 10:1}
                     />
                 ))
         );
         
     }, [polyline, selectedType]); // polyline이 업데이트되면 렌더링
 
-    const searchAllRoot = useCallback(async (e) => {
+    
+
+    const handleSearchCarRoute = useCallback(async (e) => {
         resetData();
         if(days[selectedDay]?.markerIds.length <= 1) return;
         const priorities = ["RECOMMEND", "TIME", "DISTANCE"];
         if(days[selectedDay]?.markerIds.length === 2) {
             const selectedDayMarkerData = days[selectedDay]?.markerIds.map(id => markerData[id]);
-
             const results = await Promise.all(
-                priorities.map(priority =>
-                    axios.post(`/kakaoMap/search?priority=${priority}`, Object.values(selectedDayMarkerData))
-                )
+                priorities.map(priority =>{
+                    return axios.post(`/kakaoMap/search?priority=${priority}`, Object.values(selectedDayMarkerData))
+                })
             );
             const newRoutes = [];
             
@@ -378,7 +374,7 @@ export default function KakaoMapTest() {
                     duration: duration,
                     linepath: linepath, 
                 };
-
+                console.log(routeSegment);
                 newRoutes.push(routeSegment);
             });
             
@@ -396,12 +392,9 @@ export default function KakaoMapTest() {
             },
         }));
 
-        // setPolyLine(prev => [
-        //     ...prev,
-        //     {linepath: {...polylineData}, }
-        // ])
         } else {
             const selectedDayMarkerData = days[selectedDay]?.markerIds.map(id => markerData[id]);
+
             const {data} = await axios.post("/kakaoMap/searchAll", Object.values(selectedDayMarkerData));
             const {summary, sections} = data.routes[0];
             
@@ -426,6 +419,7 @@ export default function KakaoMapTest() {
                     duration : duration,
                     linepath : linepath
                 };
+                
                 newRoutes.push(routeSegment);
 
 
@@ -443,6 +437,91 @@ export default function KakaoMapTest() {
         }
     }, [days, selectedDay])
 
+    const handleSearchWalkRoute = useCallback(async (e) => {
+        resetData();
+        if(days[selectedDay]?.markerIds.length <= 1) return;
+        const priorities = ["RECOMMEND", "TIME", "DISTANCE"];
+        if(days[selectedDay]?.markerIds.length === 2) {
+            const selectedDayMarkerData = days[selectedDay].markerIds.map(id => markerData[id]);
+            // const results = await Promise.all(
+            //     priorities.map(priority =>{
+            //         return axios.post(`/kakaoMap/searchForWalk?priority=${priority}`, Object.values(selectedDayMarkerData))
+            //     })
+            // );
+            // console.log(results);
+            const { data } = await axios.post(`/kakaoMap/searchForWalk?priority=${priorities[0]}`, Object.values(selectedDayMarkerData))
+            const newRoutes = [];
+
+            const startId = days[selectedDay].markerIds[0]; // 마커 ID
+            const endId = days[selectedDay].markerIds[1]; // 마커 ID
+            const routeKey = `${startId}##${endId}`;
+
+            // 4. 단일 경로 세그먼트 객체 (RouteSegmentDto와 매핑) 생성
+            const routeSegment = {
+                ...data,
+                routeKey: routeKey,
+            };
+            console.log(routeSegment);
+
+            newRoutes.push(routeSegment);
+
+            // 5. State 업데이트 (한 번만 호출)
+            setDays(prev => ({
+                ...prev,
+                [selectedDay]: {
+                    ...prev[selectedDay],
+                    routes: [
+                        ...(prev[selectedDay]?.routes || []), // 기존 경로 유지
+                        ...newRoutes, // 새 경로 추가
+                    ],
+                },
+            }));
+
+        } else {
+            const selectedDayMarkerData = days[selectedDay]?.markerIds.map(id => markerData[id]);
+
+            const {data} = await axios.post(`/kakaoMap/searchForWalk?priority=${priorities[0]}`, Object.values(selectedDayMarkerData));
+            console.log(data);
+            const newRoutes = [];
+            // distance 배열의 길이만큼 반복
+            data.distance.forEach((distance, index) => {
+                const startId = days[selectedDay].markerIds[index]; // 마커 ID
+                const endId = days[selectedDay].markerIds[index+1]; // 마커 ID
+                const routeKey = `${startId}##${endId}`;
+                
+                const routeSegment = {
+                    routeKey: routeKey,
+                    distance: distance, // 해당 구간의 거리
+                    duration: data.duration[index], // 해당 구간의 시간
+                    linepath: data.linepath[index], // 해당 구간의 경로
+                    priority: data.priority // 전체 경로의 우선순위는 동일
+                };
+                
+                newRoutes.push(routeSegment);
+            });
+            console.log(newRoutes);
+
+            setDays(prev => ({
+               ...prev,
+               [selectedDay]: {
+                    ...prev[selectedDay],
+                    routes : [
+                        ...(prev[selectedDay]?.routes || []),
+                        ...newRoutes
+                    ]
+                }
+            }));
+        }
+    }, [days, selectedDay])
+
+    const searchAllRoot = useCallback(async (e) => {
+        if (selectedSearch === "CAR"){
+            await handleSearchCarRoute(e);
+        } else if (selectedSearch === "WALK"){
+            await handleSearchWalkRoute(e);
+        }
+    }, [selectedSearch, handleSearchCarRoute, handleSearchWalkRoute])
+
     const resetData = useCallback(e => {
         setPolyLine([]);
     }, [])
@@ -450,9 +529,13 @@ export default function KakaoMapTest() {
     const selectType = useCallback(e => {
         const {name} = e.target;
         setSelectedType(prev => ({
-            ...prev,
-            [name] : !prev[name]
+            [name] : true
         }))
+    }, [])
+
+    const selectSearch = useCallback(e => {
+        const {name} = e.target;
+        setSelectedSearch(name)
     }, [])
 
     const addDays = useCallback(e=>{
@@ -561,11 +644,15 @@ export default function KakaoMapTest() {
             </div>
             <div className="row mt-4">
                 <div className="col">
-                    <button type="button" className="btn btn-secondary" onClick={searchAllRoot}>테스트 조회용</button>
-                    <button type="button" className="btn btn-secondary ms-1" name="RECOMMEND" onClick={selectType}>추천경로</button>
-                    <button type="button" className="btn btn-secondary ms-1" name="TIME" onClick={selectType}>최단시간</button>
-                    <button type="button" className="btn btn-secondary ms-1" name="DISTANCE" onClick={selectType}>최단길이</button>
-                    <button type="button" className="btn btn-secondary ms-1" onClick={sendData}>데이터 전송</button>
+                    <button type="button" className="btn btn-secondary"  onClick={searchAllRoot}>테스트 조회용</button>
+                    <button type="button" className={`btn ${selectedSearch === "CAR"? "btn-success":"btn-secondary"} ms-1`} name="CAR" onClick={selectSearch}>자동차</button>
+                    <button type="button" className={`btn ${selectedSearch === "WALK"? "btn-success":"btn-secondary"} ms-1`} name="WALK" onClick={selectSearch}>도보</button>
+                </div>
+                <div className="col">
+                    <button type="button" className={`btn ${selectedType?.RECOMMEND? "btn-success":"btn-secondary"} ms-1`} name="RECOMMEND" onClick={selectType}>추천경로</button>
+                    <button type="button" className={`btn ${selectedType?.TIME? "btn-success":"btn-secondary"} ms-1`} name="TIME" onClick={selectType}>최단시간</button>
+                    <button type="button" className={`btn ${selectedType?.DISTANCE? "btn-success":"btn-secondary"} ms-1`} name="DISTANCE" onClick={selectType}>최단길이</button>
+                    <button type="button" className={`btn btn-secondary ms-1`} onClick={sendData}>데이터 전송</button>
                 </div>
                 <div className="row mt-2">
                     <label className="col-sm-3 col-form-label">
