@@ -14,10 +14,18 @@ import ServiceCenterButton from "./components/servicecenter/ServiceCenterButton"
 import ServiceCenterPopup from "./components/servicecenter/ServiceCenterPopup"
 import ChatSocket from "./components/servicecenter/ChatSocket"
 import useChat from "./utils/hooks/useChat"
+import { accessTokenState, clearLoginState, refreshTokenState } from "./utils/jotai"
+import { useAtom, useSetAtom } from "jotai"
 
-function App() { 
+function App() {
   const { isPopupOpen, openPopup, closePopup, isChatOpen,
-          openChat, closeChat, chatNo, } = useChat();
+    openChat, closeChat, chatNo, } = useChat();
+
+  // jotai state
+  const [accessToken, setAccessToken] = useAtom(accessTokenState);
+  const [refreshToken, setRefreshToken] = useAtom(refreshTokenState);
+  const clearLogin = useSetAtom(clearLoginState);
+
 
   return (
     <>

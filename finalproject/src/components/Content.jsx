@@ -13,7 +13,9 @@ import AccountPayDetail from "./account/AccountPayDetail";
 {/* 회원 관련 */ }
 import AccountJoin from "./account/accountJoin/AccountJoin";
 import AccountLogin from "./account/accountLogin";
-
+import AccountJoinFinish from "./account/accountJoin/AccountJoinFinish";
+import AccountFindId from "./account/accountFind/AccountFindId";
+import AccountFindPw from "./account/accountFind/AccountFindPw";
 {/* 일정 관련 */ }
 import ScheduleData from "./schedule/ScheduleData";
 import Schedule from "./schedule/Schedule";
@@ -26,9 +28,8 @@ import Main from "./templates/Main";
 // 고객센터 화면
 import CounselorDashboard from "./dashboard/CounselorDashboard";
 import Unauthorized from "./error/Unauthorized";
-import AccountFindId from "./account/AccountFindId";
-import AccountFindPw from "./account/AccountFindPw";
-import AccountJoinFinish from "./account/accountJoin/AccountJoinFinish";
+
+
 
 
 

@@ -219,7 +219,7 @@ const AccountJoinStep2 = ({ verifiedPhone }) => {
                                         <input type={showPassword ? "text" : "password"}
                                             className={`form-control ${accountClass.accountPw}`}
                                             name="accountPw" value={account.accountPw} onChange={changeStrValue}
-                                            onBlur={checkAccountPw} style={{paddingRight:"45px"}} />
+                                            onBlur={checkAccountPw} style={{paddingRight:"45px", backgroundImage : "none"}} />
                                         <span onClick={() => setShowPassword(!showPassword)}
                                             className="position-absolute top-50 end-0 translate-middle-y me-3 text-secondary"
                                             style={{cursor: "pointer"}}>
@@ -245,7 +245,7 @@ const AccountJoinStep2 = ({ verifiedPhone }) => {
                                         <input type={showPasswordCheck ? "text" : "password"} 
                                             className={`form-control ${accountClass.accountPw2}`}
                                             name="accountPw2" value={account.accountPw2} onChange={changeStrValue}
-                                            onBlur={checkAccountPw} style={{paddingRight:"45px"}} />
+                                            onBlur={checkAccountPw} style={{paddingRight:"45px", backgroundImage : "none"}} />
                                         <span onClick={() => setShowPasswordCheck(!showPasswordCheck)}
                                             className="position-absolute top-50 end-0 translate-middle-y me-3 text-secondary"
                                             style={{cursor: "pointer"}}>
