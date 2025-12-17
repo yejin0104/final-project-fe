@@ -166,3 +166,39 @@ border: 2px solid #dee2e6;
   }
 }
 
+
+
+/* 제미나이가 만들어준 임시 CSS */
+/* Schedule.css 등에 추가 */
+.day-group {
+    position: relative;
+}
+
+.marker-list-inner {
+    /* 마커들을 살짝 들여쓰기하여 구분선과 정렬 */
+    padding-left: 10px;
+}
+
+.day-divider {
+    position: sticky; /* 스크롤 시 날짜 고정을 원하면 사용 */
+    top: 0;
+    z-index: 10;
+    background: white;
+}
+
+/* 마커 간의 연결 느낌을 주려면 */
+.marker-list-inner::before {
+    content: "";
+    position: absolute;
+    left: 25px; /* Marker의 순서 badge 위치에 맞춰 조정 */
+    top: 60px;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+    z-index: -1;
+}
+
+.all-schedule-container, .search-results {
+  height: 750px;
+  overflow: scroll;
+}

@@ -157,6 +157,7 @@ export default function KakaoMapTest() {
     // 주소 검색
     const addMarkerForSearch = useCallback(async (e)=>{
         setSearchList([]);
+        console.log("addMarkerForSearch 실행");
         const {data} = await axios.post("/kakaoMap/searchAddress", searchData);
         // const {documents} = data;
         // console.log(data);
@@ -580,11 +581,10 @@ export default function KakaoMapTest() {
     }, [days, selectedDay])
 
     const searchAllRoot = useCallback(async (e) => {
-        if (selectedSearch === "CAR"){
-            await handleSearchCarRoute(e);
-        } else if (selectedSearch === "WALK"){
-            await handleSearchWalkRoute(e);
-        }
+        await Promise.all([
+            handleSearchCarRoute(e),
+            handleSearchWalkRoute(e)
+        ]);
     }, [selectedSearch, handleSearchCarRoute, handleSearchWalkRoute])
 
     const selectType = useCallback(e => {

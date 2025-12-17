@@ -81,7 +81,7 @@ export default function Content() {
                     <Route path="/schedulePage/:scheduleNo" element={<SchedulePage />} >
                         <Route index element={<ScheduleData />} />
                         <Route path="data" element={<ScheduleData />} />
-                        <Route path="shearch" element={<ScheduleSearch />} />
+                        <Route path="search" element={<ScheduleSearch />} />
                     </Route>
 
                     <Route path="kakaotest" element={<KakaoMapTest />}></Route>

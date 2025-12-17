@@ -93,8 +93,14 @@ export default function MarkerListSection({ markerIds, routes, markerData, setDa
     )});
 
     return (
-        <div>
-            {listElements}
+        <div className="marker-list-inner">
+            {markerIds.length > 0 ? (
+                listElements
+            ) : (
+                <div className="text-center py-4 text-muted small border-top border-bottom">
+                    이 날짜에는 일정이 없습니다.
+                </div>
+            )}
         </div>
     );
 }
