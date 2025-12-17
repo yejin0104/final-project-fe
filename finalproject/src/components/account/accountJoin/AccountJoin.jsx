@@ -16,7 +16,7 @@ export default function AccountJoin() {
     }, [loginId]);
 
     // 현재 단계 (1. 본인인증, 2. 회원정보입력)
-    const [step, setStep] = useState(2);
+    const [step, setStep] = useState(1);
 
     // 인증된 전화번호를 저장
     const [verifiedPhone, setVerifiedPhone] = useState("");

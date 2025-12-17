@@ -121,28 +121,25 @@ export default function Menu() {
 
   const sendDate = useCallback(async () => {
 
-    console.log("데이터 시작");
-
     try {
-          const { data } = await axios.post("http://localhost:8080/schedule/insert",
-            
-      {
-        scheduleName : scheduleName,
-        scheduleOwner : "testuser1",
-        scheduleStartDate : startDate ? startDate.format("YYYY-MM-DDTHH:mm:ss") : null ,
-        scheduleEndDate : endDate ? endDate.format("YYYY-MM-DDTHH:mm:ss") : null, 
-        tagNoList : selectTag
-        
-      } )
-      toast.success("["+data.scheduleName + "] 일정, 등록 완료!");
+      const { data } = await axios.post("http://localhost:8080/schedule/insert",
+
+        {
+          scheduleName: scheduleName,
+          scheduleOwner: "testuser1",
+          scheduleStartDate: startDate ? startDate.format("YYYY-MM-DDTHH:mm:ss") : null,
+          scheduleEndDate: endDate ? endDate.format("YYYY-MM-DDTHH:mm:ss") : null,
+          tagNoList: selectTag
+
+        })
+
+      toast.success("[" + data.scheduleName + "] 일정, 등록 완료!");
       console.log("데이터 확인" + data.scheduleNo);
       closeModal();
       navigate(`/schedulePage/${data.scheduleNo}`);
 
     } catch (error) {
       toast.error("일정 등록이 실패되었습니다.");
-
-
     }
 
   }, [scheduleName, startDate]);
@@ -187,7 +184,7 @@ export default function Menu() {
                 <li className="nav-item" onClick={closeMenu}>
                   <Link className="nav-link" to="/mypage">
                     <i className="fa-solid fa-user-plus"></i>
-                    <span>마이페이지</span>
+                    <span></span>
                   </Link>
                 </li>
               </>) : (<>
@@ -202,25 +199,19 @@ export default function Menu() {
                   {/* TermsModal 안에 "회원가입" 글자와 모달 로직이 다 들어있습니다 */}
                   <TermsModal />
                 </li>
-                            </>)} 
-                <li className="nav-item" onClick={closeMenu}>
-                    <Link className="nav-link" to="/scheduleList/">
-                        <i className="fa-solid fa-user-plus"></i>
-                        <span>일정조회</span>
-                    </Link>
-                </li>
-            <li className="nav-item dropdown">
-              <a className="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Dropdown</a>
-              <div className="dropdown-menu">
-                <a className="dropdown-item" href="#">Action</a>
-                <a className="dropdown-item" href="#">Another action</a>
-                <a className="dropdown-item" href="#">Something else here</a>
-                <div className="dropdown-divider"></div>
-                <a className="dropdown-item" href="#">Separated link</a>
-              </div>
-            </li>
-          </ul>
-          {/* <form className="d-flex">
+              </>)}
+              <li className="nav-item dropdown">
+                <a className="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Dropdown</a>
+                <div className="dropdown-menu">
+                  <a className="dropdown-item" href="#">Action</a>
+                  <a className="dropdown-item" href="#">Another action</a>
+                  <a className="dropdown-item" href="#">Something else here</a>
+                  <div className="dropdown-divider"></div>
+                  <a className="dropdown-item" href="#">Separated link</a>
+                </div>
+              </li>
+            </ul>
+            {/* <form className="d-flex">
         <input className="form-control me-sm-2" type="search" placeholder="Search"/>
         <button className="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
       </form> */}
