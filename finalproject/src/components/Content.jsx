@@ -76,7 +76,7 @@ export default function Content() {
                     {/* 카카오페이 결제 내역 */}
 
                     {/* 일정 관련 */}
-                    <Route path="/scheduleList" element={<ScheduleList />} />
+                    <Route path="/scheduleList/" element={<ScheduleList />} />
 
                     <Route path="/schedulePage/:scheduleNo" element={<SchedulePage />} >
                         <Route index element={<ScheduleData />} />

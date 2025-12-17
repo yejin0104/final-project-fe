@@ -21,7 +21,6 @@ export default function Reply() {
   const [hoverIndex, setHoverIndex] = useState(null);
   const [showReviewUnitList, setShowReviewUnitList] = useState([]);
 
-
     const cleanData = useCallback(() => {
       setInput("");
       setAccountName("");
@@ -30,54 +29,42 @@ export default function Reply() {
 
   const { scheduleNo } = useParams();
 
-  async function loadReplyList() {
+  async function loadData() {
 
     try {
-      const { data } = await axios.get(`http://localhost:8080/review/list/${scheduleNo}`);
+      const { data } = await axios.get(`/review/list/${scheduleNo}`);
       console.log(data);
       setReplyList(data);
+      setShowUnitList(data[0].scheduleUnitNoList);
 
     } catch (error) {
       <h2>대기중</h2>
     }
   };
-
-  async function loadScheduleUnitList() {
-
-    try {
-      const { data } = await axios.get(`http://localhost:8080/review/list/${scheduleNo}/unit`);
-      setShowUnitList(data);
-
-    } catch (error) {
-
-    }
-  }
   useEffect(() => {
-    loadReplyList();
-    loadScheduleUnitList();
-  }, [scheduleNo]);
+    loadData();
+  }, []);
 
   async function loadReviewUnitList(reviewNo) {
     console.log("숫자"+reviewNo)
-    const {data} = await axios.get(`http://localhost:8080/review/unit/${reviewNo}`);
+    const {data} = await axios.get(`/review/unit/${reviewNo}`);
     console.log(data);
-    setShowReviewUnitList(data);
+    setShowReviewUnitList(data);''
   }
 
   const sendData = useCallback(async () => {
 
     cleanData();
     try {
-      const { data } = await axios.post("http://localhost:8080/review/insert",
+      const { data } = await axios.post("/review/insert",
         {
           scheduleNo: Number(scheduleNo),
           scheduleUnitList: scheduleUnitList,
           reviewContent: input,
-        }
+                }
       );
       setAccountName(data.reviewWriterNickname);
-    loadReplyList();
-    loadScheduleUnitList();
+    loadData();
     setScheduleUnitList([]);
 
     } catch (error) {
@@ -88,11 +75,11 @@ export default function Reply() {
 
   const deleteScheduleUnitNo = useCallback(async (reviewNo,scheduleUnitNo)=>{
     try {
-      await axios.delete(`http://localhost:8080/review/unit/${reviewNo}`, {
+      await axios.delete(`/review/unit/${reviewNo}`, {
         params : {scheduleUnitNo}
       });
       console.log(scheduleUnitNo);
-          loadReplyList();
+          loadData();
           toast.success("성공");
 
     } catch (error) {
@@ -110,11 +97,11 @@ export default function Reply() {
 
   const sendUpdateReply = useCallback( async (reply) => {
 
-      await axios.patch(`http://localhost:8080/review/${reply.reviewNo}`, {
+      await axios.patch(`/review/${reply.reviewNo}`, {
       reviewContent : editReply
      });
      setEditReviewNo(null);
-    loadReplyList();
+     loadData();
     loadReviewUnitList();
 
   }, [editReply]);
@@ -144,11 +131,11 @@ export default function Reply() {
       title: "삭제 완료!",
       icon: "success"
     });
-    await axios.delete(`http://localhost:8080/review/${reply.reviewNo}`);
-    loadReplyList();
+    await axios.delete(`/review/${reply.reviewNo}`);
+    
   }
-  
-  loadScheduleUnitList();
+  loadData();
+
 });
     
   }, [])
@@ -243,16 +230,20 @@ export default function Reply() {
             <div className="col m-110 d-flex gap-2 flex-wrap">
               {showunitList.map((unit, index) => {
                 const isSelect = scheduleUnitList.includes(unit.scheduleUnitNo);
-              return (
+              return (<>
+              {showunitList.length === 0  && (<>
                 <button
                 type="button"
                  key={unit.scheduleUnitNo} className={`btn small ${isSelect ? "btn-outline-secondary" : "btn-secondary"}`}
                   onClick={() =>{ 
                     checkScheduleUnitNo(unit.scheduleUnitNo)
                     }} >
+                    
                   {index + 1}번 일정 (#{unit.scheduleUnitNo})
                 </button>
-              )})}
+              
+              </>)}
+             </> )})}
             </div>
           </div>
           <div className="row mt-1">
