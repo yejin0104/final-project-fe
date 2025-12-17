@@ -58,7 +58,6 @@ export default function MyPage() {
                                 <FaUser size={32} />
                             </div>
                             <h5 className="fw-bold m-0" style={{ color: "#333", fontSize: "1.1rem" }}>이위섭님</h5>
-                            <p className="text-muted small mt-1">Gold Member</p>
                         </div>
 
                         {/* 메뉴 링크들 */}

@@ -181,6 +181,12 @@ export default function Menu() {
                     <span>{loginId} ({loginLevel})</span>
                   </Link>
                 </li>
+                <li className="nav-item" onClick={closeMenu}>
+                  <Link className="nav-link" to="/mypage">
+                    <i className="fa-solid fa-user-plus"></i>
+                    <span>마이페이지</span>
+                  </Link>
+                </li>
               </>) : (<>
                 {/* 비로그인 시 나와야 하는 화면 */}
                 <li className="nav-item" onClick={closeMenu}>
