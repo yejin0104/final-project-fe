@@ -21,6 +21,8 @@ export default function useChat() {
       // 채팅방 번호 저장하고, 채팅방 열기
       setChatNo(newChatNo);
       setIsChatOpen(true);
+      console.log("채팅방 생성 성공, 채팅방 번호:", newChatNo);
+      console.log("isChatOpen:", isChatOpen);
     } catch (error) {
       console.error("채팅방 생성 실패:", error);
       // 에러 처리 로직 추가 (예: 사용자에게 오류 메시지 표시)

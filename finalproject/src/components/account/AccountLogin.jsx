@@ -50,8 +50,15 @@ export default function AccountLogin() {
             // Axios 헤더 설정
             axios.defaults.headers.common["Authorization"] = `Bearer ${data.accessToken}`;
 
+            
+            if (data.loginLevel === '상담사') {
+                navigate("/counselor/dashboard");
+            }
+            else {
+                navigate("/");
+            }
             // 메인으로 이동
-            navigate("/");
+            //navigate("/");
         } catch (err) {
             setIsLoginFail(true); // 실패 표시
         }

@@ -16,6 +16,7 @@ import ChatSocket from "./components/servicecenter/ChatSocket"
 import useChat from "./utils/hooks/useChat"
 import { accessTokenState, clearLoginState, refreshTokenState } from "./utils/jotai"
 import { useAtom, useSetAtom } from "jotai"
+import CounselorBlocker from "./components/dashboard/CounselorBlocker"
 
 function App() {
   const { isPopupOpen, openPopup, closePopup, isChatOpen,
@@ -30,6 +31,7 @@ function App() {
   return (
     <>
       <BrowserRouter>
+      <CounselorBlocker />
         {/* Jotai 개발자 도구 */}
         {process.env.NODE_ENV === "development" && <DevTools />}
 
