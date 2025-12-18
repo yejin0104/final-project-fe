@@ -78,6 +78,10 @@
  font-size: 0.8em;
 }
 
+.detail-text {
+  flex-grow: 2;   /* 기본 1 대비 약 2배 */
+}
+
 /* div {
     box-shadow: 0 0 1px 0 grey;
 } */
