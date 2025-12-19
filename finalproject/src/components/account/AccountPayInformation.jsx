@@ -62,8 +62,8 @@ export default function AccountPayInformation() {
 
             <div className="row">
                 <div className="col">
-                    <h3 className="text-center">카카오페이 결제내역 조회</h3>
-                    <p className="text-center text-desc">
+                    <h3 className="text-center ellipsis">카카오페이 결제내역 조회</h3>
+                    <p className="text-center text-desc ellipsis">
                         카카오페이에서 결제내역을 알아봅시다.
                     </p>
                 </div>
@@ -94,7 +94,7 @@ export default function AccountPayInformation() {
             <div className="d-flex align-items-center">
                 {paymentList === null ? (
 
-                    <div className="fw-bold" style={{ width: 220 }}>
+                    <div className="fw-bold ellipsis" style={{ width: 220 }}>
                         결제 내역 조회 Loading...
                     </div>
 
@@ -112,7 +112,7 @@ export default function AccountPayInformation() {
                                     <div className="p-4 shadow rounded d-flex align-items-start w-100">
 
                                         {/* 상품명 영역 */}
-                                        <div className="fw-bold me-3" style={{ width: 220 }}>
+                                        <div className="fw-bold me-3 ellipsis" style={{ width: 220 }}>
                                             {payment.paymentName}
                                         </div>
 
@@ -120,22 +120,22 @@ export default function AccountPayInformation() {
                                         <div className="d-flex align-items-center flex-grow-1">
 
                                             {/* 텍스트 3줄 영역 (가로폭 크게) */}
-                                            <div className="d-flex flex-column gap-1 text-smallSize flex-grow-1">
+                                            <div className="d-flex flex-column gap-1 flex-grow-1">
                                                 <div className="row">
-                                                    <div className="col-sm-4 text-primary">거래금액</div>
-                                                    <div className="col-sm-8 text-secondary">총 {numberWithComma(payment.paymentTotal)}원</div>
+                                                    <div className="col-sm-4 text-primary ellipsis">거래금액</div>
+                                                    <div className="col-sm-8 text-secondary ellipsis">총 {numberWithComma(payment.paymentTotal)}원</div>
                                                 </div>
                                                 <div className="row">
-                                                    <div className="col-sm-4 text-primary">거래번호</div>
-                                                    <div className="col-sm-8 text-secondary">{payment.paymentTid}</div>
+                                                    <div className="col-sm-4 text-primary ellipsis">거래번호</div>
+                                                    <div className="col-sm-8 text-secondary ellipsis">{payment.paymentTid}</div>
                                                 </div>
                                                 <div className="row">
-                                                    <div className="col-sm-4 text-primary">거래일시</div>
-                                                    <div className="col-sm-8 text-secondary">{formatDateTime(payment.paymentTime)}</div>
+                                                    <div className="col-sm-4 text-primary ellipsis">거래일시</div>
+                                                    <div className="col-sm-8 text-secondary ellipsis">{formatDateTime(payment.paymentTime)}</div>
                                                 </div>
                                                 <div className="row">
-                                                    <div className="col-sm-4 text-primary">상태</div>
-                                                    <div className={`col-sm-8 text-${statusTextColor(payment)}`}>{calculateStatus(payment)}</div>
+                                                    <div className="col-sm-4 text-primary ellipsis">상태</div>
+                                                    <div className={`col-sm-8 text-${statusTextColor(payment)} ellipsis`}>{calculateStatus(payment)}</div>
                                                 </div>
                                             </div>
 
@@ -144,7 +144,7 @@ export default function AccountPayInformation() {
                                                 <Link
                                                     to={`/kakaopay/pay/detail/${payment.paymentNo}`}
                                                     state={{ isRefund: !checkPaymentRefund(payment.paymentTime) }}
-                                                    className="btn btn-outline-info"
+                                                    className="btn btn-outline-info ellipsis"
                                                     style={{ fontSize: "0.8em" }}
                                                 >
                                                     자세히 보기 <FaArrowRight />
