@@ -7,6 +7,9 @@ export const loginIdState = atomWithStorage("loginId", "", sessionStorage);//joa
 //회원의 등급 상태
 export const loginLevelState = atomWithStorage("loginLevel", "", sessionStorage);
 
+//회원의 게스트 키
+export const guestKeyState = atomWithStorage("guestKey", "", sessionStorage);
+
 //accessToken
 export const accessTokenState = atomWithStorage("accessToken", "", sessionStorage);//브라우저를 닫으면 로그인이 풀림
 
@@ -27,6 +30,13 @@ export const adminState = atom(get => {
     const loginId = get(loginIdState);
     const loginLevel = get(loginLevelState);
     return loginId?.length > 0 && loginLevel === "관리자";
+})
+
+//비회원인지 판정
+export const guestState = atom(get => {
+    const loginId = get(loginIdState);
+    const loginLevel = get(loginLevelState);
+    return loginId === null && loginLevel === "비회원";
 })
 
 //상담사인지 판정 
@@ -76,3 +86,4 @@ counselorState.debugLabel = "counselorState";
 currentChatIdState.debugLabel = "currentChatIdState";
 messagesByChatIdState.debugLabel = "messagesByChatIdState";
 wsConnectionState.debugLabel = "wsConnectionState";
+guestKeyState.debugLabel = "guestKeyState";

@@ -50,6 +50,15 @@ export const adminState = atom(get=>{//jotai
     return loginId?.length > 0 && loginLevel === "관리자";
 });
 
+//토큰 있는지, 게스트인지 확인 (비회원용)
+export const guestState = atom(get=> {
+    const accessToken = get(accessTokenState);
+    const level = get(loginLevelState);
+
+    return accessToken?.length > 0 && level === "GUEST";
+});
+
+
 //로그인 관련 state를 초기화하는 함수 (쓰기 함수)
 //문법 - const 변수명 = atom(null, 변경함수);
 export const clearLoginState = atom(
@@ -73,3 +82,4 @@ adminState.debugLabel = "adminState";
 accessTokenState.debugLabel = "accessTokenState";
 loginCompleteState.debugLabel = "loginCompleteState";
 refreshTokenState.debugLabel = "refreshTokenState";
+guestState.debugLabel = "guestState";

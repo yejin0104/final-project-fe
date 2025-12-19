@@ -66,6 +66,22 @@ export default function SchedulePage() {
     })
     const [selectedSearch, setSelectedSearch] = useState("CAR")
 
+  const copyUrl = useCallback(async () => {
+
+    try {
+
+          const {data} = await axios.get(`/schedule/share/${scheduleNo}`);
+          console.log("shareKey",data);
+
+          const url = `${window.location.origin}/share/${data}`;
+          await navigator.clipboard.writeText(url);
+          
+          toast.success("링크 복사 완료")
+    } catch (error) {
+      
+    }
+
+  }, []);
     const [center, setCenter] = useState({
         lng: 126.9780,
         lat: 37.5665,

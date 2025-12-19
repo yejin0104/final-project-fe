@@ -102,10 +102,6 @@ border: 2px solid #dee2e6;
     margin-top: 60px;
 }
 
-.today {
-    font-weight: bolder;
-}
-
 .day-wrapper{
     position: relative;
 }
