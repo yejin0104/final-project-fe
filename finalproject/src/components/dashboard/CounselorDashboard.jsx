@@ -151,9 +151,16 @@ export default function CounselorDashboard() {
         }
     }, [loginId, room]);
 
+    // useEffect(() => {
+    //     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // }, [messages, selectedRoomId]);
+    
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages, selectedRoomId]);
+        if (messagesEndRef.current) { 
+            const container = messagesEndRef.current;
+            container.scrollTop = container.scrollHeight;
+        }
+    }, [history]);
 
     // 1. 최초 1회 연결
     useEffect(() => {
@@ -396,7 +403,7 @@ export default function CounselorDashboard() {
                         const badge = getBadgeStyle(room.status);
 
                         return (
-                            <div key={room.id} onClick={() => handleRoomClick(room.id)}
+                            <div key={room.id} onClick={() => handleRoomClick(room.id)} 
                                 style={{
                                     ...styles.roomItem,
                                     backgroundColor: selectedRoomId === room.id ? '#e6f7ff' : 'white',
@@ -441,9 +448,10 @@ export default function CounselorDashboard() {
                                     <span style={styles.closedBadge}>상담 종료됨</span>
                                 )}
                             </div>
-
-                            <div style={styles.messageArea}>
+                            
+                            <div style={styles.messageArea} ref={messagesEndRef}>
                                 {(messages[selectedRoomId] || []).map((msg, i) => {
+                                    
                                     // 백엔드 로그 기준: 전송 시 messageSender에 loginId를 담아 보냈으므로 확인
                                     console.log("Received message");
                                     const sender = msg.messageSender || msg.loginId; 
@@ -549,10 +557,10 @@ export default function CounselorDashboard() {
                                 <p>배정 상담사: {currentRoom?.chatId || '없음'}</p>
                             </div>
 
-                            <div style={styles.infoCard}>
+                            {/* <div style={styles.infoCard}>
                                 <strong>지도 영역</strong>
                                 <div style={styles.mapPlaceholder}>[ Kakao Map ]</div>
-                            </div>
+                            </div> */}
                         </div>
                     ) : (
                         <div style={{ textAlign: 'center', color: '#999', marginTop: '50px' }}>
