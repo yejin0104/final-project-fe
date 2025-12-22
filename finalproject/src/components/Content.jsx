@@ -45,6 +45,8 @@ import AccountDashboard from "./admin/dashboard/AdminDashboard";
 import Private from "./guard/Private";
 import Admin from "./guard/Admin";
 import Home from "./Home";
+import MemberReview from "./schedule/MemberReview";
+import Review from "./schedule/Review";
 import AdminSchedule from "./admin/schedule/AdminSchedule";
 import AdminCounselor from "./admin/counselor/AdminCounselor";
 import AdminPayment from "./admin/payment/AdminPayment";
@@ -93,6 +95,8 @@ export default function Content() {
                     {/* 일정 관련 */}
                     <Route path="/scheduleList/" element={<ScheduleList />} />
                     <Route path="/schedule" element={<Schedule />} />
+                    <Route path="/schedule/memberReview" element={<MemberReview />} />
+                    <Route path="/schedule/review" element={<Review />} />
 
                     {/* 비회원 확인용 */}
                     <Route path="/share/:shareKey" element={<ShareGate/>}></Route>

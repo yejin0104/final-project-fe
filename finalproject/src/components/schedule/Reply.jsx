@@ -10,7 +10,7 @@ import { accessTokenState, guestKeyState, guestState, loginIdState, loginLevelSt
 import { guestNicknameState } from "../../../../test-kakaopay/src/utils/jotai";
 
 
-export default function Reply() {
+export default function Reply({ memberList = [] }) {
 
     const [input, setInput] = useState("");
     const [replyList, setReplyList] = useState([]);
@@ -29,7 +29,13 @@ export default function Reply() {
     const loginLevel = useAtomValue(loginLevelState);
     const guestNickname = useAtomValue(guestNicknameState);
     const isGuest = useAtomValue(guestState);
-
+const isMember = memberList?.some(
+  (m) => String(m.accountId ?? "").trim() === String(loginId ?? "").trim()
+);   
+console.log("loginId =", loginId, typeof loginId);
+console.log("memberList ids =", memberList?.map(m => m.accountId));
+console.log("isMember =", memberList?.some(m => String(m.accountId).trim() === String(loginId).trim()));
+console.log("리스트확인",memberList);
     const [profileUrl, setProfileUrl] = useState("/images/default-profile.jpg");
 
     const cleanData = useCallback(() => {
@@ -341,10 +347,17 @@ export default function Reply() {
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                         />
-                        <button type="button" className="reply-btn-v3 primary" onClick={sendData}>
+                        <button type="button" className="reply-btn-v3 primary" onClick={sendData} disabled={!isMember  || !input.trim()}>
                             등록
                         </button>
                     </div>
+                    {!isMember  && (
+                        <div className="text-muted small mt-2">
+                            {isGuest
+                                ? "댓글 작성은 로그인 후 가능합니다."
+                                : "참여자(멤버)만 댓글을 작성할 수 있어요."}
+                        </div>
+                    )}
                 </div>
             </div>
         </>

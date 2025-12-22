@@ -10,14 +10,16 @@ import axios from "axios";
 import KakaoLoader from "../kakaomap/useKakaoLoader";
 import { Map, MapMarker, Polyline } from "react-kakao-maps-sdk";
 import { v4 as uuidv4 } from "uuid";
-import { guestState, loginIdState } from "../../utils/jotai";
+import { accessTokenState, guestState, loginIdState } from "../../utils/jotai";
 import Swal from "sweetalert2";
+import MemberReview from "./MemberReview";
+import Review from "./Review";
 
 
 
 export default function SchedulePage() {
     KakaoLoader()
-
+    const accessToken = useAtomValue(accessTokenState);
     const guest = useAtomValue(guestState);
     const loginId = useAtomValue(loginIdState);
 
@@ -52,7 +54,6 @@ export default function SchedulePage() {
         DISTANCE: false
     })
     const [selectedSearch, setSelectedSearch] = useState("CAR")
-
     const copyUrl = useCallback(async () => {
 
         try {
@@ -109,10 +110,10 @@ export default function SchedulePage() {
         scheduleNo: scheduleNo
     })
 
-    
-        useEffect(() => {
-  console.log("SchedulePage params scheduleNo =", scheduleNo);
-}, [scheduleNo]);
+
+    useEffect(() => {
+        console.log("SchedulePage params scheduleNo =", scheduleNo);
+    }, [scheduleNo]);
 
     const PRIORITY_COLORS = {
         RECOMMEND: "#0052FF",
@@ -157,6 +158,7 @@ export default function SchedulePage() {
             }
         ]))
     }, [])
+
 
     const addDays = useCallback(() => {
         const currentDayKeys = Object.keys(days).map(Number);
@@ -579,38 +581,52 @@ export default function SchedulePage() {
     }, [selectedDay, days, selectedSearch, selectedType]);
 
     const loadMember = useCallback(async () => {
-  const { data } = await axios.get(`/schedule/memberList/${scheduleNo}`);
-  setMemberList(data);
-}, [scheduleNo]);
+        const { data } = await axios.get(`/schedule/memberList/${scheduleNo}`);
+        setMemberList(data);
+    }, [scheduleNo]);
 
+    //일정 시작 시간에 따른 상태를 바꾸기 위한 콜백
+    const refreshScheduleState = useCallback(async () => {
+        if (!scheduleNo) return;
+        const { data } = await axios.patch(`/schedule/${scheduleNo}/state`);
+        // data 예: { scheduleNo, scheduleState, scheduleStartDate, scheduleEndDate }
+        setScheduleDto(prev => ({
+            ...prev,
+            scheduleState: data.scheduleState,
+        }));
+    }, [scheduleNo]);
+
+    //시작할 때 진행되는 이팩트
     useEffect(() => {
         loadMember();
+        refreshScheduleState().catch(console.log);
 
-    }, [loadMember]);
+
+    }, [loadMember, refreshScheduleState]);
 
     // 링크를 타고 들어온 회원 멤버 리스트에 추가
     useEffect(() => {
-  if (!scheduleNo) return;
-  if (!accountId) return;      // 로그인 안 했으면 패스
-  if (guest) return;           // 비회원이면 패스 (회원만 자동참여)
+        if (!scheduleNo) return;
+        if (!accountId) return;      // 로그인 안 했으면 패스
+        if (guest) return;           // 비회원이면 패스 (회원만 자동참여)
 
-  // memberList가 아직 로딩 전이면 패스
-  if (!Array.isArray(memberList)) return;
+        // memberList가 아직 로딩 전이면 패스
+        if (!Array.isArray(memberList)) return;
 
-  // 이미 멤버인지 체크
-  const already = memberList.some(m => m.accountId === accountId);
-  if (already) return;
+        // 이미 멤버인지 체크
+        const already = memberList.some(m => m.accountId === accountId);
+        if (already) return;
 
-  (async () => {
-    try {
-      await axios.post(`/share/member/${scheduleNo}`, {accountId : loginId});
+        (async () => {
+            try {
+                await axios.post(`/share/member/${scheduleNo}`, { accountId: loginId });
 
-    loadMember();
-    } catch (e) {
-      console.log("멤버 자동추가 실패", e);
-    }
-  })();
-}, [scheduleNo, accountId, guest, memberList]);
+                loadMember();
+            } catch (e) {
+                console.log("멤버 자동추가 실패", e);
+            }
+        })();
+    }, [scheduleNo, accountId, guest, memberList]);
 
 
     useEffect(() => {
@@ -670,130 +686,167 @@ export default function SchedulePage() {
     };
 
     const toggleSchedulePublicWithSwal = async () => {
-  const nextState = !scheduleDto.schedulePublic;
+        const nextState = !scheduleDto.schedulePublic;
 
-  const result = await Swal.fire({
-    title: nextState ? "공개로 변경할까요?" : "비공개로 변경할까요?",
-    text: nextState
-      ? "공개하면 링크를 가진 사람이 일정을 볼 수 있어요."
-      : "비공개로 바꾸면 나만 볼 수 있어요.",
-    icon: "question",
-    showCancelButton: true,
-    confirmButtonText: "변경",
-    cancelButtonText: "취소",
-    confirmButtonColor: nextState ? "#79c6b5" : "#6c757d", // 민트/그레이
-    cancelButtonColor: "#adb5bd",
-    reverseButtons: true,
-    focusCancel: true,
-  });
+        const result = await Swal.fire({
+            title: nextState ? "공개로 변경할까요?" : "비공개로 변경할까요?",
+            text: nextState
+                ? "공개하면 링크를 가진 사람이 일정을 볼 수 있어요."
+                : "비공개로 바꾸면 나만 볼 수 있어요.",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "변경",
+            cancelButtonText: "취소",
+            confirmButtonColor: nextState ? "#79c6b5" : "#6c757d", // 민트/그레이
+            cancelButtonColor: "#adb5bd",
+            reverseButtons: true,
+            focusCancel: true,
+        });
 
-  if (!result.isConfirmed) return;
+        if (!result.isConfirmed) return;
 
-    await axios.patch("/schedule/public", {
-       scheduleNo: Number(scheduleDto.scheduleNo),
-      schedulePublic: nextState,
-    });
+        await axios.patch("/schedule/public", {
+            scheduleNo: Number(scheduleDto.scheduleNo),
+            schedulePublic: nextState,
+        });
 
-  setScheduleDto((prev) => ({
-    ...prev,
-    schedulePublic: nextState,
-  }));
+        setScheduleDto((prev) => ({
+            ...prev,
+            schedulePublic: nextState,
+        }));
 
-  await Swal.fire({
-    title: "변경 완료!",
-    text: nextState ? "일정이 공개되었습니다." : "일정이 비공개로 변경되었습니다.",
-    icon: "success",
-    timer: 1200,
-    showConfirmButton: false,
-  });
-};
+        await Swal.fire({
+            title: "변경 완료!",
+            text: nextState ? "일정이 공개되었습니다." : "일정이 비공개로 변경되었습니다.",
+            icon: "success",
+            timer: 1200,
+            showConfirmButton: false,
+        });
+    };
 
-return (
-  <>
-    <div className="container-fluid px-3 py-3 schedule-page">
+    const [reviews, setReviews] = useState([]);
 
-      {/* ===== 상단: 좌 패널 + 우 지도 ===== */}
-      <div className="row g-3 align-items-stretch">
-        
-        {/* 좌측 패널 */}
-        <div className="col-12 col-lg-4 col-xl-3">
-          <div className="panel-card h-100">
+    const loadReviews = useCallback(async () => {
+        const { data } = await axios.get(`/review/list/${scheduleNo}`);
+        setReviews(data);
+    }, [scheduleNo]);
 
-            {/* 상단 액션/정보 바 */}
-            <div className="panel-topbar">
-              <button
-                type="button"
-                className={`btn ${scheduleDto.schedulePublic ? "btn-success" : "btn-outline-secondary"} btn-sm`}
-                onClick={toggleSchedulePublicWithSwal}
-                
-              >
-                {scheduleDto.schedulePublic ? "공개" : "비공개"}
-              </button>
+    useEffect(() => { loadReviews(); }, [loadReviews]);
 
-              {!guest && (
-                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={copyUrl}>
-                  <FaLink className="me-1" />
-                  공유
-                </button>
-              )}
+    const handleSubmit = async (payload) => {
+        await axios.post(
+            "/review/insert",
+            { scheduleNo: Number(scheduleNo), reviewContent: payload.reviewContent, scheduleUnitList: [] },
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+
+        await loadReviews();
+    };
+
+    console.log("scheduleDto", scheduleDto);
+    return (
+        <>
+            <div className="container-fluid px-3 py-3 schedule-page">
+
+                {/* ===== 상단: 좌 패널 + 우 지도 ===== */}
+                <div className="row g-3 align-items-stretch">
+
+                    {/* 좌측 패널 */}
+                    <div className="col-12 col-lg-4 col-xl-3">
+                        <div className="panel-card h-100">
+
+                            {/* 상단 액션/정보 바 */}
+                            <div className="panel-topbar">
+                                <button
+                                    type="button"
+                                    className={`btn ${scheduleDto.schedulePublic ? "btn-success" : "btn-outline-secondary"} btn-sm`}
+                                    onClick={toggleSchedulePublicWithSwal}
+
+                                >
+                                    {scheduleDto.schedulePublic ? "공개" : "비공개"}
+                                </button>
+
+                                {!guest && (
+                                    <button type="button" className="btn btn-outline-secondary btn-sm" onClick={copyUrl}>
+                                        <FaLink className="me-1" />
+                                        공유
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* 참여자 */}
+                            <div className="panel-members">
+                                <span className="panel-label">참여자</span>
+                                <div className="panel-member-chips">
+                                    {memberList.map((member) => (
+                                        <span className="member-chip"
+                                            key={member.scheduleMemberNo}
+                                        >
+                                            {member.scheduleMemberNickname}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="panel-divider" />
+
+                            {/* Schedule 컴포넌트 영역 */}
+                            <div className="panel-body">
+                                <Schedule
+                                    copyUrl={copyUrl}
+                                    memberList={memberList}
+                                    outletContext={outletContext}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 우측 지도 */}
+                    <div className="col-12 col-lg-8 col-xl-9">
+                        <div className="map-card h-100">
+                            <Map
+                                className="map-info"
+                                center={center}
+                                level={3}
+                                onClick={(_, mouseEvent) => addMarker(mouseEvent.latLng)}
+                            >
+                                {markerElements()}
+                                {tempMarkerElements()}
+                                {polylineElements()}
+                            </Map>
+                        </div>
+                    </div>
+
+                </div>
+
+                {/* ===== 하단: 댓글 ===== */}
+                <div className="row mt-3">
+                    <div className="col-12">
+                        <div className="reply-card-wrap">
+                            {(scheduleDto.scheduleState === "약속전" ||
+                                scheduleDto.scheduleState === "진행중") && <Reply memberList={memberList} />}
+
+                            {scheduleDto.public === true || <Review />}
+
+                            {scheduleDto.scheduleState === "종료" && (
+                                scheduleDto.schedulePublic ? (
+                                    <Review />
+                                ) : (
+                                    <MemberReview
+                                        reviews={reviews}
+                                        canWrite={true}
+                                        isGuest={guest}
+                                        onSubmit={handleSubmit}
+                                    />
+                                )
+                            )}
+
+                        </div>
+                    </div>
+                </div>
+
             </div>
-
-            {/* 참여자 */}
-            <div className="panel-members">
-              <span className="panel-label">참여자</span>
-              <div className="panel-member-chips">
-                {memberList.map((member) => (
-                  <span className="member-chip"
-                   key={member.scheduleMemberNo}
-                  >
-                    {member.scheduleMemberNickname}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="panel-divider" />
-
-            {/* Schedule 컴포넌트 영역 */}
-            <div className="panel-body">
-              <Schedule
-                copyUrl={copyUrl}
-                memberList={memberList}
-                outletContext={outletContext}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* 우측 지도 */}
-        <div className="col-12 col-lg-8 col-xl-9">
-          <div className="map-card h-100">
-            <Map
-              className="map-info"
-              center={center}
-              level={3}
-              onClick={(_, mouseEvent) => addMarker(mouseEvent.latLng)}
-            >
-              {markerElements()}
-              {tempMarkerElements()}
-              {polylineElements()}
-            </Map>
-          </div>
-        </div>
-
-      </div>
-
-      {/* ===== 하단: 댓글 ===== */}
-      <div className="row mt-3">
-        <div className="col-12">
-          <div className="reply-card-wrap">
-            <Reply />
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </>
-);
+        </>
+    );
 
 }
