@@ -1,5 +1,5 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { accessTokenState, adminState, clearLoginState, loginCompleteState, loginIdState, loginLevelState, loginState } from "../utils/jotai";
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
@@ -10,6 +10,8 @@ import ScheduleModal from "./schedule/ScheduleModal";
 export default function Menu() {
   // 이동 도구
   const navigate = useNavigate();
+  const location = useLocation();
+
 
   // jotai state
   const [loginId, setloginId] = useAtom(loginIdState);
@@ -20,7 +22,7 @@ export default function Menu() {
   const isAdmin = useAtomValue(adminState);
   const clearLogin = useSetAtom(clearLoginState);
 
-  //state
+  // state
   const [open, setOpen] = useState(false);
 
   // 일정 모달 열림/닫힘 상태 관리
@@ -43,12 +45,12 @@ export default function Menu() {
 
   }, [accessToken, setLoginComplete]);
 
-  //callback
+  // callback
   const closeMenu = useCallback(() => {
     setOpen(false);
   }, []);
 
-  //callback
+  // callback
   // 모달 열기 핸들러
   const openModal = useCallback(() => {
     if (isLogin) {
@@ -189,7 +191,13 @@ export default function Menu() {
         <div className="container-fluid">
           {/* Brand Logo */}
           <Link className="navbar-brand" to="/" style={styles.brand}>
-            <i className="fa-solid fa-plane-departure" style={{ marginRight: "8px" }}></i>
+            {/* [수정] 로고 이미지 추가 (기존 아이콘 대체) */}
+            <img
+              src="/images/logo.png"
+              alt="Logo"
+              style={{ height: "50px", marginRight: "5px", marginTop: "5px", objectFit: "contain" }}
+              onError={(e) => e.target.style.display = 'none'} // 이미지 없으면 숨김
+            />
             TripPlanner
           </Link>
 
@@ -215,13 +223,8 @@ export default function Menu() {
                 </Link>
               </li>
               <li className="nav-item" onClick={closeMenu}>
-                <Link className="nav-link" to="#" style={styles.navLink}>
+                <Link className="nav-link" to="/scheduleList" style={styles.navLink}>
                   <CiMap style={{ fontSize: "1.2rem" }} /> 추천 일정
-                </Link>
-              </li>
-              <li className="nav-item" onClick={closeMenu}>
-                <Link className="nav-link" to="#" style={styles.navLink}>
-                  <CiCreditCard1 style={{ fontSize: "1.2rem" }} /> 항공/숙소 할인
                 </Link>
               </li>
             </ul>
@@ -251,7 +254,7 @@ export default function Menu() {
               <div className="d-flex align-items-center ms-3" style={styles.divider}>
                 {isLogin === true ? (
                   <>
-                    {/* ★ 로그인 상태: 텍스트 정보 제거 -> 프로필 아이콘으로 대체 */}
+                    {/* ★ 로그인 상태 */}
 
                     {/* 1. 프로필 아이콘 (클릭 시 마이페이지 이동) */}
                     <Link
@@ -271,7 +274,7 @@ export default function Menu() {
                       <CiUser style={{ fontSize: "1.5rem" }} />
                     </Link>
 
-                    {/* 모바일 화면 대응: 햄버거 메뉴 안에서도 마이페이지 텍스트 링크 보이기 (선택사항, 필요없으면 제거 가능) */}
+                    {/* 모바일 대응: 햄버거 메뉴 안에서도 마이페이지 텍스트 링크 */}
                     <Link
                       to="/mypage"
                       className="d-lg-none"
@@ -334,7 +337,7 @@ export default function Menu() {
         isOpen={isScheduleModalOpen}
         onClose={closeModal}
       />
-      <TermsModal isOpen={isAgreementModalOpen} onClose={closeModal}/>
+      <TermsModal isOpen={isAgreementModalOpen} onClose={closeModal} />
     </>
   );
 }

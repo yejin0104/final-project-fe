@@ -9,22 +9,24 @@ import { useImage } from "../../utils/hooks/useImage";
 const MINT_COLOR = "#78C2AD";
 
 export default function ScheduleModal({ isOpen, onClose }) {
-    //jotai state
+    // jotai state
     const loginId = useAtomValue(loginIdState);
     const isLogin = useAtomValue(loginState);
     const accessToken = useAtomValue(accessTokenState);
-
 
     const [scheduleName, setScheduleName] = useState("");
     const [startDate, setStartDate] = useState(dayjs().format("YYYY-MM-DDTHH:mm"));
     const [endDate, setEndDate] = useState(dayjs().format("YYYY-MM-DDTHH:mm"));
     const [checked, setChecked] = useState(false);
+    
+    // [추가] 공개 여부 상태 (기본값 Y)
+    const [schedulePublic, setSchedulePublic] = useState("Y");
 
     const [tags, setTags] = useState([]);
     const [selectTag, setSelectTag] = useState([]); // 태그 '이름'들을 담습니다.
 
     // custom hook
-    const { file, preview, handleFile } = useImage("/images/default-profile.jpg");
+    const { file, preview, handleFile, setPreview, setFile } = useImage("/images/default-profile.jpg");
 
     useEffect(() => {
         if (isOpen) {
@@ -33,20 +35,25 @@ export default function ScheduleModal({ isOpen, onClose }) {
             setEndDate(dayjs().format("YYYY-MM-DDTHH:mm"));
             setChecked(false);
             setSelectTag([]);
+            setSchedulePublic("N"); // 기본 비공개
+            
+            if(setPreview) setPreview("/images/default-schedule.png");
+            if(setFile) setFile(null);
+
             loadTags();
         }
-    }, [isOpen]);
+    }, [isOpen, setPreview, setFile]);
 
     const loadTags = async () => {
         try {
-            const { data } = await axios.get("http://localhost:8080/schedule/tagList");
+            const { data } = await axios.get("/schedule/tagList");
             setTags(data);
         } catch (e) {
             console.error("태그 로드 실패", e);
         }
     };
 
-    // [수정] 태그 선택 핸들러: '번호'가 아니라 '이름(tagName)'을 저장합니다.
+    // 태그 선택 핸들러
     const tagCheck = useCallback((tagName) => {
         setSelectTag(prev =>
             prev.includes(tagName) ? prev.filter(t => t !== tagName) : [...prev, tagName]
@@ -55,16 +62,16 @@ export default function ScheduleModal({ isOpen, onClose }) {
 
     const categories = Array.from(new Set(tags.map(t => t.tagCategory)));
 
-    // 프로필 추가를 위해 @ModelAttribute 사용해서 포장형식을 맞춰줌
     const sendData = useCallback(async () => {
         // 로그인 상태가 아니라면 차단
         if (!isLogin || !loginId) {
             alert("로그인 정보가 유효하지 않습니다");
-            onclose();
+            onClose();
             return;
         }
 
         if (!scheduleName) return alert("일정 제목을 입력해주세요.");
+        
         // FormData를 사용해 필요한 데이터를 담음
         const formData = new FormData();
 
@@ -72,33 +79,24 @@ export default function ScheduleModal({ isOpen, onClose }) {
         formData.append("scheduleOwner", loginId);
         formData.append("scheduleStartDate", dayjs(startDate).format("YYYY-MM-DDTHH:mm:ss"));
         formData.append("scheduleEndDate", checked ? dayjs(endDate).format("YYYY-MM-DDTHH:mm:ss") : dayjs(startDate).format("YYYY-MM-DDTHH:mm:ss"));
+        // [추가] 공개 여부 전송
+        formData.append("schedulePublic", schedulePublic);
+        
         formData.append("tagNoList", selectTag);
 
-        if (file) {// 파일이 있으면 전송 목록에 추가
+        if (file) { // 파일이 있으면 전송 목록에 추가
             formData.append("attach", file);
         }
 
-        // const data = {
-        //     scheduleName: scheduleName,
-        //     scheduleOwner: loginId,
-        //     scheduleStartDate: dayjs(startDate).format("YYYY-MM-DDTHH:mm:ss"), // 백엔드 필드명 일치
-        //     scheduleEndDate: checked ? dayjs(endDate).format("YYYY-MM-DDTHH:mm:ss") : dayjs(startDate).format("YYYY-MM-DDTHH:mm:ss"),
-
-        //     // [확인] 백엔드 VO는 tagNoList라고 되어있지만, 실제로는 List<String> 타입으로 이름을 받습니다.
-        //     tagNoList: selectTag 
-        // };
-
-
-
         try {
-            await axios.post("http://localhost:8080/schedule/insert", formData);
-            alert(`[${formData.get('scheduleName')}] 일정이 등록되었습니다!`);
+            await axios.post("/schedule/insert", formData);
+            alert(`[${scheduleName}] 일정이 등록되었습니다!`);
             onClose();
         } catch (error) {
             console.error("등록 에러:", error);
             alert("일정 등록이 실패되었습니다.");
         }
-    }, [scheduleName, startDate, endDate, checked, selectTag, onClose, isLogin, loginId]);
+    }, [scheduleName, startDate, endDate, checked, schedulePublic, selectTag, file, onClose, isLogin, loginId]);
 
     if (!isOpen) return null;
 
@@ -116,10 +114,9 @@ export default function ScheduleModal({ isOpen, onClose }) {
 
                         <div className="modal-body p-4">
 
-                            {/* [추가] 사진 업로드 UI */}
+                            {/* 사진 업로드 UI */}
                             <div className="text-center mb-4">
                                 <div className="position-relative d-inline-block">
-                                    {/* 미리보기 이미지 */}
                                     <img
                                         src={preview}
                                         alt="일정 대표 이미지"
@@ -135,7 +132,6 @@ export default function ScheduleModal({ isOpen, onClose }) {
                                         }}
                                     />
 
-                                    {/* 카메라 아이콘 버튼 (SVG 직접 삽입하여 라이브러리 의존성 제거) */}
                                     <label
                                         className="position-absolute bottom-0 end-0 bg-white rounded-circle border shadow-sm d-flex justify-content-center align-items-center"
                                         style={{ width: "35px", height: "35px", cursor: "pointer" }}
@@ -154,7 +150,7 @@ export default function ScheduleModal({ isOpen, onClose }) {
                                 </div>
                                 <div className="text-muted small mt-2">일정 대표 사진</div>
                             </div>
-                            {/* [끝] 사진 업로드 UI */}
+
                             <div className="mb-4">
                                 <label className="form-label fw-bold small text-muted">일정 제목</label>
                                 <input
@@ -195,6 +191,43 @@ export default function ScheduleModal({ isOpen, onClose }) {
                                 </div>
                             </div>
 
+                            {/* [추가] 공개 여부 선택 UI */}
+                            <div className="mb-4">
+                                <label className="form-label fw-bold small text-muted">공개 설정</label>
+                                <div className="d-flex gap-4 p-3 bg-light rounded-3">
+                                    <div className="form-check">
+                                        <input
+                                            className="form-check-input"
+                                            type="radio"
+                                            name="schedulePublic"
+                                            id="publicY"
+                                            value="Y"
+                                            checked={schedulePublic === "Y"}
+                                            onChange={(e) => setSchedulePublic(e.target.value)}
+                                            style={{ cursor: "pointer" }}
+                                        />
+                                        <label className="form-check-label fw-semibold" htmlFor="publicY" style={{ cursor: "pointer", color: "#555" }}>
+                                            🔓 전체 공개
+                                        </label>
+                                    </div>
+                                    <div className="form-check">
+                                        <input
+                                            className="form-check-input"
+                                            type="radio"
+                                            name="schedulePublic"
+                                            id="publicN"
+                                            value="N"
+                                            checked={schedulePublic === "N"}
+                                            onChange={(e) => setSchedulePublic(e.target.value)}
+                                            style={{ cursor: "pointer" }}
+                                        />
+                                        <label className="form-check-label fw-semibold" htmlFor="publicN" style={{ cursor: "pointer", color: "#555" }}>
+                                            🔒 비공개
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
                             <hr className="my-4 text-muted opacity-25" />
 
                             <div>
@@ -208,9 +241,8 @@ export default function ScheduleModal({ isOpen, onClose }) {
                                                 {categoryTags.map((tag) => (
                                                     <button
                                                         key={tag.tagNo} type="button"
-                                                        // [수정] tag.tagName을 넘깁니다.
                                                         onClick={() => tagCheck(tag.tagName)}
-                                                        className={`btn btn-sm rounded-pill px-3 fw-bold transition-all ${selectTag.includes(tag.tagName) // 이름으로 비교
+                                                        className={`btn btn-sm rounded-pill px-3 fw-bold transition-all ${selectTag.includes(tag.tagName)
                                                             ? "text-white shadow-sm"
                                                             : "btn-outline-secondary border-0 bg-light text-secondary"
                                                             }`}

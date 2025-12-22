@@ -1,12 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
-import { FaTrash, FaUser, FaUserTimes } from "react-icons/fa"; // 회원탈퇴 아이콘 추가
+import { FaTrash, FaUser, FaHeart } from "react-icons/fa"; 
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AiOutlineSchedule } from "react-icons/ai";
 import { MdPayment } from "react-icons/md";
-import { FaHeart } from "react-icons/fa";
 import axios from "axios";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { accessTokenState, clearLoginState, loginCompleteState, loginIdState, loginLevelState, loginState, refreshTokenState } from "../../utils/jotai";
+import { accessTokenState, clearLoginState, loginCompleteState, loginIdState, loginLevelState, loginState } from "../../utils/jotai";
 import Swal from 'sweetalert2'
 import { toast } from "react-toastify";
 
@@ -17,9 +16,9 @@ const PALETTE = {
     hoverBg: "#f7fdfb",      // 호버색
     defaultText: "#555555",  // 기본 글자
     border: "#eaeaea",       // 경계선
-    dangerBg: "#fff5f5",     // 위험(탈퇴) 배경 (연한 빨강)
-    dangerText: "#e03131",   // 위험(탈퇴) 글자 (진한 빨강)
-    dangerHover: "#ffc9c9"   // 위험(탈퇴) 호버 배경
+    dangerBg: "#fff5f5",     // 위험(탈퇴) 배경
+    dangerText: "#e03131",   // 위험(탈퇴) 글자
+    dangerHover: "#ffc9c9"   // 위험(탈퇴) 호버
 };
 
 export default function MyPage() {
@@ -27,13 +26,13 @@ export default function MyPage() {
     // 이동 도구
     const navigate = useNavigate();
 
-    //jotai state
+    // jotai state
     const [loginId, setloginId] = useAtom(loginIdState);
     const [loginLevel, setLoginLevel] = useAtom(loginLevelState);
     const [accessToken, setAccessToken] = useAtom(accessTokenState);
     const [logincomplete, setLoginComplete] = useAtom(loginCompleteState);
     const isLogin = useAtomValue(loginState);
-    const clearLogin = useSetAtom(clearLoginState); // setter 가져오기
+    const clearLogin = useSetAtom(clearLoginState); 
 
     // 링크 공통 스타일
     const linkBaseStyle = {
@@ -54,8 +53,8 @@ export default function MyPage() {
     const [activeTab, setActiveTab] = useState(location.pathname);
     const [profileUrl, setProfileUrl] = useState("/images/default-profile.jpg");
 
-    //state 
-    const [myInfo, setMyinfo] = useState({//백엔드에서 넘겨준 데이터를 state에 저장
+    // state (내 정보)
+    const [myInfo, setMyinfo] = useState({
         accountId: "",
         accountNickname: "",
         accountEmail: "",
@@ -63,7 +62,7 @@ export default function MyPage() {
         accountGender: "",
         accountContact: "",
         accountLevel: "",
-        attachmentNo: null // 사진 번호 (없으면 null)
+        attachmentNo: null
     });
 
     useEffect(() => {
@@ -73,17 +72,19 @@ export default function MyPage() {
     }, [logincomplete]);
 
     useEffect(() => {
-        // 경로가 정확히 '/mypage'일 때만 info로 보냄
+        // 경로가 정확히 '/mypage'일 때만 info로 리다이렉트
         if (location.pathname === '/mypage' || location.pathname === '/mypage/') {
             navigate('info', { replace: true });
         }
         setActiveTab(location.pathname);
-    }, [location.pathname]);
+    }, [location.pathname, navigate]);
 
     const loadData = useCallback(async () => {
         try {
+            // [중요] 여기서 토큰을 이용해 내 정보를 다 가져옴
             const resp = await axios.get("/account/mypage");
             setMyinfo(resp.data);
+            
             if (resp.data.attachmentNo) {
                 setProfileUrl(`http://localhost:8080/attachment/download?attachmentNo=${resp.data.attachmentNo}`);
             } else {
@@ -96,68 +97,95 @@ export default function MyPage() {
     }, []);
 
     const deleteAccount = useCallback(async (e) => {
-        // 1. 비밀번호 입력 창 띄우기 (결과를 먼저 변수에 받음)
+        // [수정] Swal 하나로 통합하여 디자인 적용
         const result = await Swal.fire({
-            title: "삭제를 위해 비밀번호를 한 번 더 입력해주세요",
-            input: "password",
-            inputLabel: "Password",
-            inputPlaceholder: "Enter your password",
+            title: '회원 탈퇴',
+            html: `
+                <div style="text-align: center;">
+                    <p style="color: #e03131; font-weight: bold; margin-bottom: 10px; font-size: 1.1rem;">
+                        정말로 탈퇴하시겠습니까?
+                    </p>
+                    <p style="font-size: 0.9rem; color: #666; margin-bottom: 20px; line-height: 1.5;">
+                        탈퇴 시 모든 일정과 정보가 삭제되며<br/>
+                        <span style="color: #e03131;">복구할 수 없습니다.</span><br/><br/>
+                        본인 확인을 위해 비밀번호를 입력해주세요.
+                    </p>
+                </div>
+            `,
+            icon: 'warning',
+            input: 'password',
+            inputPlaceholder: '비밀번호 입력',
             inputAttributes: {
-                maxlength: "10",
-                autocapitalize: "off",
-                autocorrect: "off"
+                autocapitalize: 'off',
+                autocorrect: 'off'
             },
-            showCancelButton: true, // 취소 버튼 추가 권장
+            showCancelButton: true,
             confirmButtonText: '탈퇴하기',
+            cancelButtonText: '취소',
+            confirmButtonColor: '#e03131', // 위험 색상 (Red)
+            cancelButtonColor: '#adb5bd',  // 회색
+            reverseButtons: true, // 버튼 순서 변경
+            focusCancel: true,    // 취소 버튼에 포커스 (실수 방지)
+            customClass: {
+                input: 'form-control text-center mx-auto w-75', // 입력창 스타일
+                popup: 'rounded-4 shadow-lg' // 팝업 둥글게
+            }
         });
 
-        // 2. 사용자가 '확인'을 눌렀고, 비밀번호(value)가 있을 때만 실행
         if (result.isConfirmed && result.value) {
             const rawPassword = result.value;
 
             try {
-                // (1) 백엔드에 삭제 요청
                 await axios.post("/account/withdraw", { accountPw: rawPassword });
 
-                // (2) 성공 시, 브라우저 저장소 비우기 (필수!)
                 window.sessionStorage.removeItem("accessToken");
                 window.localStorage.removeItem("refreshToken");
                 delete axios.defaults.headers.common["Authorization"];
 
-                // (3) Jotai 상태(메모리) 초기화 (작성하신 부분)
                 clearLogin();
 
-                // (4) 완료 메시지 및 이동
-                toast.success("삭제가 완료되었습니다");
-                navigate("/");
+                // [수정] 성공 알림도 예쁘게
+                Swal.fire({
+                    icon: 'success',
+                    title: '탈퇴 완료',
+                    text: '그동안 서비스를 이용해주셔서 감사합니다.',
+                    confirmButtonColor: '#78C2AD'
+                }).then(() => {
+                    navigate("/");
+                });
 
             } catch (e) {
                 console.error(e);
-                // 비밀번호가 틀렸거나 서버 오류일 때
-                toast.error("삭제에 실패하였습니다. 비밀번호를 확인해주세요.");
+                Swal.fire({
+                    icon: 'error',
+                    title: '탈퇴 실패',
+                    text: '비밀번호가 일치하지 않거나 오류가 발생했습니다.',
+                    confirmButtonColor: '#78C2AD'
+                });
             }
         }
-    }, [clearLogin]); // 의존성 배열 추가
+    }, [clearLogin, navigate]);
 
-    //render
-    return (<>
+    // render
+    return (
         <div className="container-fluid p-0" style={{ minHeight: "100vh", backgroundColor: "#f8f9fa" }}>
             <div className="row g-0 h-100">
                 {/* 1. 사이드바 영역 */}
                 <nav className="col-2 d-none d-md-block bg-white d-flex flex-column justify-content-between"
                     style={{ minHeight: "100vh", borderRight: `1px solid ${PALETTE.border}`, position: "relative" }}>
 
-                    {/* 상단 프로필 및 메뉴 */}
                     <div className="pt-5 px-3">
                         {/* 프로필 영역 */}
                         <div className="text-center mb-5">
                             <img src={profileUrl} className="rounded-circle border shadow-sm"
                                 style={{ width: "120px", height: "120px", objectFit: "cover" }}
                                 onError={(e) => {
-                                    e.target.src = "/images/default-profile.jpg"; // 깨짐 방지
-                                }} />
+                                    e.target.src = "/images/default-profile.jpg"; 
+                                }}
+                                alt="프로필" />
                             <h5 className="fw-bold m-0 mt-2" style={{ color: "#333", fontSize: "1.1rem" }}>{myInfo.accountNickname}</h5>
                         </div>
+                        
                         {/* 메뉴 링크들 */}
                         <ul className="nav flex-column">
                             {[
@@ -188,7 +216,8 @@ export default function MyPage() {
                             })}
                         </ul>
                     </div>
-                    {/* 하단 회원탈퇴 버튼 (화면 하단에 고정되지 않고 메뉴 아래에 여백을 두고 배치하려면 div 위치를 조정하세요) */}
+                    
+                    {/* 하단 회원탈퇴 버튼 */}
                     <div className="p-3 mb-4 mt-auto">
                         <hr className="mb-4" style={{ borderColor: PALETTE.border }} />
                         <button
@@ -196,7 +225,7 @@ export default function MyPage() {
                             style={{
                                 backgroundColor: PALETTE.dangerBg,
                                 color: PALETTE.dangerText,
-                                border: "1px solid #ffec99", // 살짝 노란/붉은 기운의 테두리
+                                border: "1px solid #ffec99",
                                 borderColor: "rgba(224, 49, 49, 0.1)",
                                 borderRadius: "12px",
                                 padding: "12px",
@@ -205,7 +234,7 @@ export default function MyPage() {
                                 transition: "all 0.2s ease"
                             }}
                             onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = "#e03131"; // 진한 빨강
+                                e.currentTarget.style.backgroundColor = "#e03131"; 
                                 e.currentTarget.style.color = "white";
                             }}
                             onMouseLeave={(e) => {
@@ -236,11 +265,17 @@ export default function MyPage() {
                             boxShadow: "0 2px 12px rgba(0,0,0,0.03)",
                             border: `1px solid ${PALETTE.border}`
                         }}>
-                            <Outlet context={{ myInfo }} />
+                            {/* [핵심 수정] 
+                                Outlet을 통해 자식 컴포넌트(MyInfo 등)에게 
+                                1. myInfo (현재 데이터)
+                                2. setMyinfo (데이터 갱신 함수)
+                                를 모두 전달합니다.
+                            */}
+                            <Outlet context={{ myInfo, setMyInfo: setMyinfo }} />
                         </div>
                     </div>
                 </main>
             </div>
         </div>
-    </>)
+    );
 }

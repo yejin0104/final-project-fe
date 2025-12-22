@@ -5,22 +5,26 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { accessTokenState, loginIdState, loginLevelState, refreshTokenState } from "../../utils/jotai";
 import TermsModal from "./accountJoin/TermsModal";
 
+const MINT_COLOR = "#78C2AD";
+
 export default function AccountLogin() {
-    
-const location = useLocation();
-const navigate = useNavigate();
 
-const redirectTo = location.state?.redirectTo || "/";
+    const location = useLocation();
+    const navigate = useNavigate();
 
-const onLoginSuccess = () => {
-  navigate(redirectTo, { replace: true });
-};
+    const redirectTo = location.state?.redirectTo || "/";
+
+    const onLoginSuccess = () => {
+        navigate(redirectTo, { replace: true });
+    };
 
     // 1. Jotai State (전역 상태)
     const [loginId, setLoginId] = useAtom(loginIdState);
     const [loginLevel, setLoginLevel] = useAtom(loginLevelState);
     const [accessToken, setAccessToken] = useAtom(accessTokenState);
     const [refreshToken, setRefreshToken] = useAtom(refreshTokenState);
+
+    const [isJoinOpen, setIsJoinOpen] = useState(false);
 
     // 2. 이미 로그인 상태라면 메인으로 리다이렉트
     useEffect(() => {
@@ -47,7 +51,7 @@ const onLoginSuccess = () => {
         try {
             // 백엔드 요청
             const { data } = await axios.post("http://localhost:8080/account/login", account);
-            
+
             // 상태 업데이트
             setLoginId(data.loginId);
             setLoginLevel(data.loginLevel);
@@ -57,7 +61,7 @@ const onLoginSuccess = () => {
             // Axios 헤더 설정
             axios.defaults.headers.common["Authorization"] = `Bearer ${data.accessToken}`;
 
-            
+
             if (data.loginLevel === '상담사') {
                 navigate("/counselor/dashboard", { replace: true });
             }
@@ -130,11 +134,11 @@ const onLoginSuccess = () => {
 
             <div className="container d-flex justify-content-center align-items-center" style={{ minHeight: "50vh" }}>
                 <div className="col-md-6 col-lg-5">
-                    
+
                     {/* 카드형 레이아웃 시작 */}
                     <div className="card card-login bg-white">
                         <div className="card-body p-5">
-                            
+
                             {/* 헤더 */}
                             <div className="text-center mb-5">
                                 <h2 className="fw-bold text-minty mb-2">로그인</h2>
@@ -143,10 +147,10 @@ const onLoginSuccess = () => {
 
                             {/* 아이디 입력 (Floating Label) */}
                             <div className="form-floating mb-3">
-                                <input 
-                                    type="text" 
-                                    className={`form-control ${isLoginFail ? 'is-invalid' : ''}`} 
-                                    id="floatingInput" 
+                                <input
+                                    type="text"
+                                    className={`form-control ${isLoginFail ? 'is-invalid' : ''}`}
+                                    id="floatingInput"
                                     name="accountId"
                                     placeholder="아이디"
                                     value={account.accountId}
@@ -157,10 +161,10 @@ const onLoginSuccess = () => {
 
                             {/* 비밀번호 입력 (Floating Label) */}
                             <div className="form-floating mb-4">
-                                <input 
-                                    type="password" 
-                                    className={`form-control ${isLoginFail ? 'is-invalid' : ''}`} 
-                                    id="floatingPassword" 
+                                <input
+                                    type="password"
+                                    className={`form-control ${isLoginFail ? 'is-invalid' : ''}`}
+                                    id="floatingPassword"
                                     name="accountPw"
                                     placeholder="비밀번호"
                                     value={account.accountPw}
@@ -172,9 +176,9 @@ const onLoginSuccess = () => {
 
                             {/* 에러 메시지 (로그인 실패 시 등장) */}
                             {isLoginFail && (
-                                <div className="alert alert-danger d-flex align-items-center p-2 mb-4 rounded-3" role="alert" style={{fontSize: '0.9rem'}}>
+                                <div className="alert alert-danger d-flex align-items-center p-2 mb-4 rounded-3" role="alert" style={{ fontSize: '0.9rem' }}>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-exclamation-circle-fill me-2" viewBox="0 0 16 16">
-                                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
+                                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z" />
                                     </svg>
                                     <div>아이디 또는 비밀번호가 일치하지 않습니다.</div>
                                 </div>
@@ -182,8 +186,8 @@ const onLoginSuccess = () => {
 
                             {/* 로그인 버튼 */}
                             <div className="d-grid gap-2">
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     className="btn btn-minty btn-lg fw-bold"
                                     onClick={sendLogin}
                                 >
@@ -192,17 +196,23 @@ const onLoginSuccess = () => {
                             </div>
 
                             {/* 하단 링크 */}
-                            <div className="d-flex justify-content-center mt-4 gap-3 text-muted" style={{fontSize: '0.85rem'}}>
+                            <div className="d-flex justify-content-center mt-4 gap-3 text-muted" style={{ fontSize: '0.85rem' }}>
                                 <Link to="/account/findId" className="text-decoration-none link-minty">
                                     아이디 찾기
                                 </Link>
-                                <span style={{opacity: 0.3}}>|</span>
+                                <span style={{ opacity: 0.3 }}>|</span>
                                 <Link to="/account/findPw" className="text-decoration-none link-minty">
                                     비밀번호 찾기
                                 </Link>
-                                <span style={{opacity: 0.3}}>|</span>
-                                <div className="text-decoration-none text-minty fw-bold">
-                                    <TermsModal/>
+                                <span style={{ opacity: 0.3 }}>|</span>
+                                <div className="d-flex align-items-center gap-2">
+                                    <span
+                                        className="fw-bold"
+                                        style={{ color: MINT_COLOR, cursor: "pointer" }}
+                                        onClick={() => setIsJoinOpen(true)}
+                                    >
+                                        회원가입
+                                    </span>
                                 </div>
                             </div>
 
@@ -212,6 +222,12 @@ const onLoginSuccess = () => {
 
                 </div>
             </div>
+
+            {/* 모달 컴포넌트 연결 */}
+            <TermsModal 
+                isOpen={isJoinOpen} 
+                onClose={() => setIsJoinOpen(false)} 
+            />
         </>
     );
 }

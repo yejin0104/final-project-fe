@@ -8,7 +8,7 @@ const AccountJoinStep1 = ({ onNext }) => {
     // state
     const [phone, setPhone] = useState("");
     const [certNumber, setCertNumber] = useState("");
-    const [isSent, setIsSent] = useState(false);
+    const [isSent, setIsSent] = useState(false); // 인증번호 발송 여부
 
     // 피드백 메시지 & 타이머 상태
     const [certFeedback, setCertFeedback] = useState("");
@@ -22,10 +22,10 @@ const AccountJoinStep1 = ({ onNext }) => {
         return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
     };
 
-    // 타이머 시작
+    // 타이머 시작 함수
     const startTimer = useCallback(() => {
         if (timerRef.current) clearInterval(timerRef.current);
-        setTimeLeft(180);
+        setTimeLeft(180); // 3분으로 리셋
         timerRef.current = setInterval(() => {
             setTimeLeft((prev) => {
                 if (prev <= 1) {
@@ -42,7 +42,7 @@ const AccountJoinStep1 = ({ onNext }) => {
         return () => { if (timerRef.current) clearInterval(timerRef.current); };
     }, []);
 
-    // 1. 인증번호 발송
+    // 1. 인증번호 발송 (및 재발송)
     const sendCert = useCallback(async () => {
         if (!phone) return;
         const cleanPhone = phone.replace(/-/g, "");
@@ -53,28 +53,37 @@ const AccountJoinStep1 = ({ onNext }) => {
             return;
         }
 
+        // 재발송일 경우 확인 메시지 (선택 사항)
+        if (isSent) {
+            if(!window.confirm("인증번호를 재전송 하시겠습니까?")) return;
+        }
+
         try {
             await axios.post("http://localhost:8080/cert/sendPhone", null, {
                 params: { phone: cleanPhone }
             });
 
+            // 상태 업데이트 (재발송 시 초기화 로직 포함)
             setIsSent(true);
-            setCertFeedback("");
-            setCertNumber("");
-            startTimer();
-            alert("인증번호가 발송되었습니다.");
+            setCertFeedback(""); // 피드백 초기화
+            setCertNumber("");   // 입력한 인증번호 초기화
+            startTimer();        // 타이머 재시작
+            
+            alert(isSent ? "인증번호가 재전송되었습니다." : "인증번호가 발송되었습니다.");
 
         } catch (e) {
             if (e.response && e.response.status === 409) {
                 alert("이미 가입된 번호입니다.\n로그인 페이지로 이동하거나 아이디 찾기를 이용해주세요.");
             } else {
-                alert("메시지 발송 실패 (테스트 모드: 성공 처리)");
-                // 테스트용
+                console.error(e);
+                alert("메시지 발송 실패 (서버 연결 확인 필요)");
+                // 테스트용 로직 (실제 사용 시 제거)
                 setIsSent(true);
+                setCertNumber("");
                 startTimer();
             }
         }
-    }, [phone, startTimer]);
+    }, [phone, startTimer, isSent]);
 
     // 2. 인증번호 확인
     const checkCert = useCallback(async () => {
@@ -114,120 +123,112 @@ const AccountJoinStep1 = ({ onNext }) => {
     };
 
     return (
-        // [수정] 컨테이너 및 중앙 정렬 적용 (width 640px)
-        <div className="container mt-5">
-            <div className="row">
-                <div className="col">
-                    <div className="card shadow-sm border-0 mx-auto" style={{ width: "640px", maxWidth: "100%" }}>
-                        <div className="card-body p-5">
-                            <h3 className="fw-bold mb-4 text-center">1단계. 본인인증</h3>
-                            <p className="text-muted mb-4 text-center">안전한 서비스 이용을 위해 휴대폰 인증을 진행해주세요.</p>
+        <div className="container d-flex justify-content-center align-items-center" style={{ minHeight: "50vh" }}>
+            <div className="card border-0 shadow-lg" style={{ width: "100%", maxWidth: "480px", borderRadius: "20px", overflow: "hidden" }}>
+                
+                {/* 상단 디자인 라인 */}
+                <div style={{ height: "6px", backgroundColor: MINT_COLOR }}></div>
 
-                            {/* 휴대폰 번호 입력 */}
-                            <div className="row mt-4">
-                                <label className="col-sm-3 col-form-label fw-bold">
-                                    {/* 아이콘 대신 텍스트로 변경 */}
-                                    휴대폰 번호 <span className="text-danger">*</span>
-                                </label>
-                                <div className="col-sm-9">
-                                    <div className="d-flex gap-2">
-                                        <input
-                                            type="text"
-                                            className="form-control"
-                                            placeholder="- 없이 숫자만 입력"
-                                            value={phone}
-                                            onChange={e => setPhone(e.target.value)}
-                                            disabled={isSent}
-                                            style={{ borderColor: isSent ? '#e9ecef' : '#ced4da' }} // 발송 후 비활성화 느낌
-                                        />
-                                        <button
-                                            type="button"
-                                            className="btn text-white text-nowrap"
-                                            style={{
-                                                minWidth: "100px",
-                                                backgroundColor: isSent ? '#6c757d' : MINT_COLOR, // 발송됨이면 회색, 아니면 민트
-                                                borderColor: isSent ? '#6c757d' : MINT_COLOR
-                                            }}
-                                            onClick={sendCert}
-                                            disabled={isSent}
-                                        >
-                                            {isSent ? "발송됨" : "인증요청"}
-                                        </button>
-                                    </div>
-                                </div>
+                <div className="card-body p-5">
+                    <div className="text-center mb-5">
+                        <h3 className="fw-bold mb-2" style={{ color: "#333", letterSpacing: "-0.5px" }}>본인 인증</h3>
+                        <p className="text-muted small">
+                            안전한 서비스 이용을 위해<br/>휴대폰 인증을 진행해주세요.
+                        </p>
+                    </div>
+
+                    {/* 1. 휴대폰 번호 입력 폼 */}
+                    <div className="mb-4">
+                        <label className="form-label fw-bold small text-secondary ms-1">휴대폰 번호</label>
+                        <div className="input-group">
+                            <input
+                                type="text"
+                                className="form-control form-control-lg bg-light border-0"
+                                placeholder="01012345678"
+                                value={phone}
+                                onChange={e => setPhone(e.target.value)}
+                                // 재전송이 가능해야 하므로 번호 수정은 막되, 버튼은 활성화
+                                // 번호 수정이 필요하면 별도 버튼을 두거나 isSent를 false로 돌리는 로직 필요
+                                readOnly={isSent} 
+                                style={{ fontSize: "1rem", borderRadius: "10px 0 0 10px" }}
+                            />
+                            <button
+                                type="button"
+                                className="btn fw-bold ms-2"
+                                style={{
+                                    // 발송 후에는 흰색 배경에 민트 테두리로 변경 (재전송 느낌)
+                                    backgroundColor: isSent ? 'white' : MINT_COLOR,
+                                    color: isSent ? MINT_COLOR : 'white',
+                                    border: isSent ? `1px solid ${MINT_COLOR}` : 'none',
+                                    minWidth: "100px",
+                                    borderRadius: "0 10px 10px 0",
+                                    transition: "0.3s"
+                                }}
+                                onClick={sendCert}
+                            >
+                                {isSent ? "재전송" : "인증요청"}
+                            </button>
+                        </div>
+                        {isSent && (
+                             <div className="form-text ms-1 text-muted" style={{fontSize: "0.8rem"}}>
+                                번호를 잘못 입력하셨나요? <span role="button" onClick={()=>{setIsSent(false); setPhone("");}} style={{textDecoration:'underline', cursor:'pointer'}}>다시 입력하기</span>
+                             </div>
+                        )}
+                    </div>
+
+                    {/* 2. 인증번호 입력 폼 (발송 성공 시 노출) */}
+                    {isSent && (
+                        <div className="mb-2 fade-in-up"> 
+                            <label className="form-label fw-bold small text-secondary ms-1">인증번호</label>
+                            <div className="input-group">
+                                <input
+                                    type="text"
+                                    className={`form-control form-control-lg bg-light border-0 ${certFeedback ? 'is-invalid' : ''}`}
+                                    placeholder="인증번호 6자리"
+                                    value={certNumber}
+                                    onChange={handleCertInput}
+                                    style={{ fontSize: "1rem", borderRadius: "10px 0 0 10px" }}
+                                />
+                                <button
+                                    type="button"
+                                    className="btn fw-bold text-white ms-2"
+                                    style={{
+                                        backgroundColor: timeLeft === 0 ? '#6c757d' : MINT_COLOR,
+                                        minWidth: "100px",
+                                        border: "none",
+                                        borderRadius: "0 10px 10px 0"
+                                    }}
+                                    onClick={checkCert}
+                                >
+                                    확인
+                                </button>
                             </div>
 
-                            {/* 인증번호 입력 (발송 성공 시에만 보임) */}
-                            {isSent && (
-                                <div className="row mt-4">
-                                    <label className="col-sm-3 col-form-label fw-bold">
-                                        {/* 아이콘 대신 텍스트로 변경 */}
-                                        인증번호 <span className="text-danger">*</span>
-                                    </label>
-                                    <div className="col-sm-9">
-                                        <div className="d-flex gap-2 position-relative">
-                                            <input
-                                                type="text"
-                                                className={`form-control ${certFeedback ? 'is-invalid' : ''}`}
-                                                placeholder="인증번호 6자리"
-                                                value={certNumber}
-                                                onChange={handleCertInput}
-                                                disabled={timeLeft === 0}
-                                            />
-
-                                            <button
-                                                type="button"
-                                                className="btn text-white text-nowrap"
-                                                style={{
-                                                    minWidth: "100px",
-                                                    backgroundColor: timeLeft === 0 ? '#6c757d' : MINT_COLOR,
-                                                    borderColor: timeLeft === 0 ? '#6c757d' : MINT_COLOR
-                                                }}
-                                                onClick={checkCert}
-                                                disabled={timeLeft === 0}
-                                            >
-                                                확인
-                                            </button>
-                                        </div>
-
-                                        {/* 피드백 및 안내 문구 */}
-                                        {certFeedback ? (
-                                            <div className="invalid-feedback d-block fw-bold">{certFeedback}</div>
-                                        ) : timeLeft === 0 ? (
-                                            <div className="form-text text-danger mt-2 fw-bold">시간이 초과되었습니다. 재전송해주세요.</div>
-                                        ) : (
-                                            <div className="form-text mt-2" style={{ color: MINT_COLOR, fontWeight: 'bold' }}>
-                                                * 3분 이내에 입력해주세요 ({formatTime(timeLeft)})
-                                            </div>
-                                        )}
-
-                                        {/* 재전송 버튼 */}
-                                        {timeLeft === 0 && (
-                                            <button
-                                                className="btn btn-sm mt-2 w-100 fw-bold"
-                                                onClick={() => {
-                                                    setIsSent(false);
-                                                    setCertNumber("");
-                                                    setCertFeedback("");
-                                                }}
-                                                style={{
-                                                    color: MINT_COLOR,
-                                                    borderColor: MINT_COLOR,
-                                                    backgroundColor: 'white'
-                                                }}
-                                            >
-                                                인증번호 재전송 하기
-                                            </button>
-                                        )}
-                                    </div>
+                            {/* 메시지 및 타이머 */}
+                            <div className="d-flex justify-content-between align-items-center mt-2 px-1">
+                                <div>
+                                    {certFeedback ? (
+                                        <small className="text-danger fw-bold">{certFeedback}</small>
+                                    ) : timeLeft === 0 ? (
+                                        <small className="text-danger fw-bold">시간이 초과되었습니다.</small>
+                                    ) : (
+                                        <small className="text-success fw-bold">
+                                            인증번호가 발송되었습니다.
+                                        </small>
+                                    )}
                                 </div>
-                            )}
+                                {timeLeft > 0 && (
+                                    <span className="badge bg-light text-dark border">
+                                        {formatTime(timeLeft)}
+                                    </span>
+                                )}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
         </div>
     );
-}
+};
 
 export default AccountJoinStep1;
