@@ -184,16 +184,23 @@ export default function MySchedule() {
                       {/* ✅ row/col 말고 flex 카드로 고정 */}
                       <div className="tp-card shadow-sm p-3 d-flex gap-3 align-items-stretch">
                         {/* 이미지 */}
-                        <div className="tp-img" style={{ width: 160 }}>
+                        <div className="tp-img" style={{ width: 160, height: 120 }}>
                           <span className={`tp-state shadow-sm ${stateBadgeClass(s.scheduleState)}`}>
                             {s.scheduleState}
                           </span>
                           <img
+                            style={{ height: "100%", width: "100%", objectFit: "cover" }}
+
                             className="w-100 border shadow-sm"
-                            src="https://www.visitbusan.net/uploadImgs/files/hqimgfiles/20200326112404471_thumbL"
-                            alt=""
+                            src={`http://localhost:8080/attachment/download/${s.scheduleImage}`
+
+                            } onError={(e) => {
+                              "/images/default-schedule.png";
+                            }}
                           />
                         </div>
+
+
 
                         {/* 내용 */}
                         <div className="d-flex flex-column justify-content-center flex-grow-1">
@@ -273,9 +280,10 @@ export default function MySchedule() {
                       {s.scheduleState}
                     </span>
                     <img
+                      style={{ height: "100%", width: "100%", objectFit: "cover" }}
+
                       className="w-100 border shadow-sm"
-                      src="https://www.visitbusan.net/uploadImgs/files/hqimgfiles/20200326112404471_thumbL"
-                      alt=""
+                      src={`http://localhost:8080/attachment/download/${s.scheduleImage}`} alt=""
                     />
                   </div>
 
