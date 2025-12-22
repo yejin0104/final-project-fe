@@ -1,19 +1,32 @@
 import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
-import "./AccountPay.css";
-import { FaQuestionCircle } from "react-icons/fa";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
+// import "./AccountPay.css"; // 스타일을 인라인/Bootstrap으로 대체하여 의존성 제거
+import { FaQuestionCircle, FaArrowLeft, FaMoneyBillWave, FaList, FaInfoCircle, FaCreditCard, FaHistory } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
 import { toast } from "react-toastify";
-import Jumbotron from "../templates/Jumbotron";
 import { numberWithComma } from "../../utils/format";
 import { confirm } from "../../utils/confirm";
 import { useAtomValue } from "jotai";
 import { loginCompleteState } from "../../utils/jotai";
 import { formatDateTime } from "../../utils/dateFormat";
 
+// 색상 팔레트 정의
+const PALETTE = {
+    primary: "#4e9f86",
+    bg: "#f8f9fa",
+    border: "#eaeaea",
+    textPrimary: "#333",
+    textSecondary: "#666",
+    textLabel: "#888",
+    danger: "#e03131",
+    dangerBg: "#fff5f5",
+    cardShadow: "0 2px 12px rgba(0,0,0,0.03)"
+};
+
 export default function AccountPayDetail() {
     const { paymentNo } = useParams();
+    const navigate = useNavigate();
 
     const [payment, setPayment] = useState(null);
     const [paymentDetailList, setPaymentDetailList] = useState(null);
@@ -27,518 +40,277 @@ export default function AccountPayDetail() {
     }, [loginComplete]);
 
     const loadData = useCallback(async () => {
-        const { data } = await axios.get(`/payment/${paymentNo}`);
-        const { paymentDto, paymentDetailList, responseVO } = data;
-        setPayment(paymentDto);
-        setPaymentDetailList(paymentDetailList);
-        setKakaopayInfo(responseVO);
-    }, []);
+        try {
+            const { data } = await axios.get(`/payment/${paymentNo}`);
+            const { paymentDto, paymentDetailList, responseVO } = data;
+            setPayment(paymentDto);
+            setPaymentDetailList(paymentDetailList);
+            setKakaopayInfo(responseVO);
+        } catch (e) {
+            console.error(e);
+            toast.error("결제 정보를 불러오는데 실패했습니다.");
+        }
+    }, [paymentNo]);
 
     const cancelAll = useCallback(async () => {
-
         const choice = await confirm({
-            title: "모든 아이템을 환불하시겠습니까?",
-            text: "환불은 돌이킬 수 없습니다.",
-            icon: "error",
-            confirmColor: "#0984e3",
-            cancelColor: "#d63031",
+            title: "전체 환불하시겠습니까?",
+            text: "이 작업은 되돌릴 수 없습니다.",
+            icon: "warning",
+            confirmColor: PALETTE.danger,
             confirmText: "전체 환불",
             cancelText: "취소",
         });
 
-        if (choice.isConfirmed === false)
-            return;
+        if (choice.isConfirmed === false) return;
 
-        await axios.delete(`/payment/${paymentNo}`);
-
-        toast.success("결제 전체 취소");
-        loadData();
-    }, []);
+        try {
+            await axios.delete(`/payment/${paymentNo}`);
+            toast.success("결제가 전체 취소되었습니다.");
+            loadData();
+        } catch (e) {
+            toast.error("환불 처리에 실패했습니다.");
+        }
+    }, [paymentNo, loadData]);
 
     const cancelUnit = useCallback(async (paymentDetail) => {
-
         const choice = await confirm({
-            title: "해당 아이템을 환불하시겠습니까?",
-            text: "환불은 돌이킬 수 없습니다.",
-            icon: "error",
-            confirmColor: "#0984e3",
-            cancelColor: "#d63031",
-            confirmText: "아이템 환불",
+            title: "선택한 상품을 환불하시겠습니까?",
+            text: "부분 환불은 되돌릴 수 없습니다.",
+            icon: "warning",
+            confirmColor: PALETTE.danger,
+            confirmText: "환불하기",
             cancelText: "취소",
         });
 
-        if (choice.isConfirmed === false)
-            return;
+        if (choice.isConfirmed === false) return;
 
-        await axios.delete(`/payment/detail/${paymentDetail.paymentDetailNo}`);
+        try {
+            await axios.delete(`/payment/detail/${paymentDetail.paymentDetailNo}`);
+            toast.success("부분 환불이 완료되었습니다.");
+            loadData();
+        } catch (e) {
+            toast.error("환불 처리에 실패했습니다.");
+        }
+    }, [loadData]);
 
-        toast.success("결제 부분 취소");
-        loadData();
-    }, []);
-
-    // 환불 가능 여부는 payment_detail은 모르고 payment만 아니 부모가 환불 여부를 결정해준다
     const location = useLocation();
     const { isRefund } = location.state || {};
 
-    // 카카오페이 공식 문서에 이 의외의 경우는 없다
     const paymentStatus = useCallback(status => {
-        if (status === "READY") return "결제 요청";
-        if (status === "SEND_TMS") return "결제 요청 메시지(TMS) 발송 완료";
-        if (status === "OPEN_PAYMENT") return "사용자가 카카오페이 결제 화면 진입";
-        if (status === "SELECT_METHOD") return "결제 수단 선택, 인증 완료";
-        if (status === "ARS_WAITING") return "ARS 인증 진행 중";
-        if (status === "AUTH_PASSWORD") return "비밀번호 인증 완료";
-        if (status === "ISSUED_SID") return "SID 발급 완료";
-        //if (status === "SUCCESS_PAYMENT") return "결제 완료";
-        if (status === "PART_CANCEL_PAYMENT") return "부분 취소";
-        if (status === "CANCEL_PAYMENT") return "결제 취소";
-        if (status === "FAIL_AUTH_PASSWORD") return "사용자 비밀번호 인증 실패";
-        if (status === "QUIT_PAYMENT") return "사용자가 결제 중단";
-        if (status === "FAIL_PAYMENT") return "결제 승인 실패";
-
-        return "결제 완료";
+        const map = {
+            "READY": "결제 요청",
+            "SEND_TMS": "메시지 발송",
+            "OPEN_PAYMENT": "결제창 진입",
+            "SELECT_METHOD": "인증 완료",
+            "ARS_WAITING": "ARS 인증 중",
+            "AUTH_PASSWORD": "비밀번호 인증",
+            "ISSUED_SID": "SID 발급",
+            "SUCCESS_PAYMENT": "결제 완료",
+            "PART_CANCEL_PAYMENT": "부분 취소",
+            "CANCEL_PAYMENT": "결제 취소",
+            "FAIL_AUTH_PASSWORD": "인증 실패",
+            "QUIT_PAYMENT": "결제 중단",
+            "FAIL_PAYMENT": "승인 실패"
+        };
+        return map[status] || "결제 완료";
     }, []);
-    // 카카오페이 공식 문서에 이 의외의 경우는 없다
+
     const paymentType = useCallback(type => {
-        if (type === "PAYMENT")
-            return "결제";
-        if (type === "ISSUED_SID")
-            return "SID 발급";
+        if (type === "PAYMENT") return "결제";
+        if (type === "ISSUED_SID") return "SID 발급";
         return "취소";
     }, []);
 
-    //return
-    return (<>
+    // 공통 정보 행 컴포넌트
+    const InfoRow = ({ label, value, isPrice = false, children }) => (
+        <div className="d-flex justify-content-between align-items-center py-2 border-bottom" style={{ borderColor: "#f1f1f1" }}>
+            <span style={{ color: PALETTE.textLabel, fontSize: "0.9rem" }}>{label}</span>
+            <div className="text-end" style={{ color: PALETTE.textPrimary, fontWeight: "500" }}>
+                {children ? children : (
+                    <span>{isPrice ? `${numberWithComma(value)}원` : value}</span>
+                )}
+            </div>
+        </div>
+    );
 
-        <div
-            className="fade-jumbotron"
-            style={{ animationDelay: `${0.03}s` }}
-        >
-            <div className="row">
-                <div className="col">
-                    <h3 className="text-center">카카오페이 결제내역 상세조회</h3>
-                    <p className="text-center text-desc">
-                        카카오페이에서 결제내역을 상세하게 알아봅시다.
-                    </p>
+    // 섹션 헤더 컴포넌트
+    const SectionHeader = ({ icon: Icon, title }) => (
+        <div className="d-flex align-items-center mb-3 pb-2 border-bottom" style={{ borderColor: PALETTE.border }}>
+            <Icon className="me-2" style={{ color: PALETTE.primary }} />
+            <h5 className="m-0 fw-bold" style={{ color: "#444" }}>{title}</h5>
+        </div>
+    );
+
+    if (payment === null || kakaopayInfo === null) {
+        return (
+            <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "60vh" }}>
+                <div className="spinner-border text-secondary" role="status"></div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="w-100 fade-item">
+            {/* 1. 상단 네비게이션 & 타이틀 */}
+            <div className="mb-4">
+                <button 
+                    onClick={() => navigate(-1)} 
+                    className="btn btn-link p-0 text-decoration-none mb-2 d-flex align-items-center"
+                    style={{ color: "#888" }}
+                >
+                    <FaArrowLeft className="me-2" /> 목록으로 돌아가기
+                </button>
+                <h3 className="fw-bold" style={{ color: "#333" }}>결제 상세 내역</h3>
+                <p style={{ color: "#999" }}>주문번호 {payment.paymentTid}의 상세 내역입니다.</p>
+            </div>
+
+            <div className="row g-4">
+                {/* 왼쪽 컬럼: 결제 요약 정보 & 상품 목록 */}
+                <div className="col-lg-7">
+                    
+                    {/* 카드 1: 결제 요약 */}
+                    <div className="bg-white p-4 rounded-4 mb-4" style={{ boxShadow: PALETTE.cardShadow, border: `1px solid ${PALETTE.border}` }}>
+                        <SectionHeader icon={FaMoneyBillWave} title="결제 요약 정보" />
+                        
+                        <div className="py-3 text-center mb-3 rounded-3" style={{ backgroundColor: "#f8f9fa" }}>
+                            <span className="d-block text-secondary mb-1" style={{ fontSize: "0.9rem" }}>총 결제 금액</span>
+                            <span className="h3 fw-bold" style={{ color: PALETTE.primary }}>
+                                {numberWithComma(payment.paymentTotal)}원
+                            </span>
+                        </div>
+
+                        <InfoRow label="결제 번호" value={payment.paymentNo} />
+                        <InfoRow label="거래 일시" value={formatDateTime(payment.paymentTime)} />
+                        <InfoRow label="대표 상품명" value={payment.paymentName} />
+                        <InfoRow label="결제 상태">
+                            <span className={`badge rounded-pill ${payment.paymentRemain === 0 ? 'bg-danger' : 'bg-secondary'}`} 
+                                  style={{ fontWeight: "normal", padding: "6px 10px" }}>
+                                {payment.paymentRemain === 0 ? "전체 취소됨" : (payment.paymentRemain < payment.paymentTotal ? "부분 취소됨" : "결제 완료")}
+                            </span>
+                        </InfoRow>
+
+                        {/* 전체 환불 버튼 */}
+                        <div className="mt-4 pt-3 border-top text-end">
+                            <button 
+                                className="btn btn-sm d-inline-flex align-items-center justify-content-center"
+                                style={{ 
+                                    backgroundColor: PALETTE.dangerBg, 
+                                    color: PALETTE.danger, 
+                                    border: "1px solid #ffc9c9",
+                                    padding: "8px 16px",
+                                    borderRadius: "8px",
+                                    fontWeight: "600"
+                                }}
+                                onClick={cancelAll}
+                                disabled={!isRefund || payment.paymentRemain === 0}
+                            >
+                                <FaXmark className="me-2" /> 전체 결제 취소
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* 카드 2: 구매 상품 목록 */}
+                    <div className="bg-white p-4 rounded-4" style={{ boxShadow: PALETTE.cardShadow, border: `1px solid ${PALETTE.border}` }}>
+                        <SectionHeader icon={FaList} title="구매 상품 목록" />
+                        
+                        <div className="d-flex flex-column gap-3">
+                            {paymentDetailList && paymentDetailList.map((detail, i) => (
+                                <div key={i} className="p-3 rounded-3 border d-flex flex-column flex-sm-row align-items-sm-center justify-content-between" 
+                                     style={{ borderColor: "#eee" }}>
+                                    
+                                    <div className="mb-2 mb-sm-0">
+                                        <div className="fw-bold mb-1" style={{ color: "#444" }}>
+                                            {detail.paymentDetailItemName}
+                                        </div>
+                                        <div style={{ fontSize: "0.85rem", color: "#888" }}>
+                                            {numberWithComma(detail.paymentDetailItemPrice)}원 × {detail.paymentDetailQty}개
+                                        </div>
+                                    </div>
+
+                                    <div className="text-end">
+                                        <div className="fw-bold mb-2" style={{ color: PALETTE.primary }}>
+                                            {numberWithComma(detail.paymentDetailItemPrice * detail.paymentDetailQty)}원
+                                        </div>
+                                        {detail.paymentDetailStatus === "승인" ? (
+                                            <button 
+                                                className="btn btn-outline-secondary btn-sm" 
+                                                style={{ fontSize: "0.75rem", borderRadius: "20px" }}
+                                                onClick={() => cancelUnit(detail)}
+                                                disabled={!isRefund}
+                                            >
+                                                부분 취소
+                                            </button>
+                                        ) : (
+                                            <span className="badge bg-danger" style={{ fontWeight: "normal" }}>취소 완료</span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* 오른쪽 컬럼: 카카오페이 상세 정보 */}
+                <div className="col-lg-5">
+                    <div className="bg-white p-4 rounded-4 h-100" style={{ boxShadow: PALETTE.cardShadow, border: `1px solid ${PALETTE.border}` }}>
+                        <SectionHeader icon={FaInfoCircle} title="카카오페이 상세 정보" />
+
+                        <div className="mb-4">
+                            <h6 className="fw-bold text-secondary mb-3" style={{ fontSize: "0.85rem" }}>기본 정보</h6>
+                            <InfoRow label="가맹점 코드" value={kakaopayInfo.cid} />
+                            <InfoRow label="상태" value={paymentStatus(kakaopayInfo.status)} />
+                            <InfoRow label="승인 시각" value={formatDateTime(kakaopayInfo.approved_at)} />
+                            {kakaopayInfo.canceled_at && (
+                                <InfoRow label="취소 시각" value={formatDateTime(kakaopayInfo.canceled_at)} />
+                            )}
+                        </div>
+
+                        <div className="mb-4">
+                            <h6 className="fw-bold text-secondary mb-3" style={{ fontSize: "0.85rem" }}>금액 상세</h6>
+                            {/* 툴팁/오버레이 대신 깔끔한 리스트로 표현 */}
+                            <div className="p-3 rounded-3" style={{ backgroundColor: "#fafafa" }}>
+                                <InfoRow label="공급가액" value={kakaopayInfo.amount.tax_free} isPrice />
+                                <InfoRow label="부가세" value={kakaopayInfo.amount.vat} isPrice />
+                                <InfoRow label="포인트 사용" value={kakaopayInfo.amount.point} isPrice />
+                                <InfoRow label="할인 금액" value={kakaopayInfo.amount.discount} isPrice />
+                            </div>
+                        </div>
+
+                        {kakaopayInfo.selected_card_info && (
+                            <div className="mb-4">
+                                <SectionHeader icon={FaCreditCard} title="결제 카드 정보" />
+                                <InfoRow label="카드사" value={kakaopayInfo.selected_card_info.card_corp_name} />
+                                <InfoRow label="할부" value={kakaopayInfo.selected_card_info.install_month > 0 ? `${kakaopayInfo.selected_card_info.install_month}개월` : "일시불"} />
+                                {kakaopayInfo.selected_card_info.interest_free_install === "Y" && (
+                                    <div className="text-end mt-1"><span className="badge bg-info text-dark">무이자 할부 적용</span></div>
+                                )}
+                            </div>
+                        )}
+
+                        <div>
+                            <SectionHeader icon={FaHistory} title="결제/취소 이력" />
+                            <div className="d-flex flex-column gap-2 mt-3">
+                                {kakaopayInfo.payment_action_details.map((detail, index) => (
+                                    <div key={index} className="p-3 border rounded-3 bg-white" style={{ borderColor: "#f0f0f0" }}>
+                                        <div className="d-flex justify-content-between mb-1">
+                                            <span className="fw-bold" style={{ fontSize: "0.9rem", color: detail.amount < 0 ? PALETTE.danger : PALETTE.primary }}>
+                                                {paymentType(detail.payment_action_type)}
+                                            </span>
+                                            <span style={{ fontSize: "0.8rem", color: "#888" }}>{formatDateTime(detail.approved_at)}</span>
+                                        </div>
+                                        <div className="d-flex justify-content-between">
+                                            <span style={{ fontSize: "0.85rem", color: "#666" }}>요청번호: {detail.aid.substring(0, 10)}...</span>
+                                            <span className="fw-bold" style={{ fontSize: "0.9rem" }}>{numberWithComma(detail.amount)}원</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
             </div>
         </div>
-
-
-        <div
-            className="fade-item"
-            style={{ animationDelay: `${0.03}s` }}
-        >
-            <div className="d-flex align-items-center">
-                {payment === null ? (
-
-                    <div className="fw-bold" style={{ width: 220 }}>
-                        결제 정보 Loading...
-                    </div>
-
-                ) : (
-
-                    <>
-                        <div className="d-flex flex-column w-100">
-
-                            <div
-                                className="fade-item w-100 mb-1"
-                                style={{ animationDelay: `${0.03}s` }}
-                            >
-                                <div className="p-4 shadow rounded d-flex align-items-start w-100">
-
-                                    {/* 상품명 영역 */}
-                                    <div className="fw-bold me-3" style={{ width: 220 }}>
-                                        결제 정보
-                                    </div>
-
-                                    {/* 중간 정보 + 버튼을 가로로 묶는 핵심 영역 */}
-                                    <div className="d-flex align-items-center flex-grow-1">
-
-                                        {/* 텍스트 3줄 영역 (가로폭 크게) */}
-                                        <div className="d-flex flex-column gap-1 flex-grow-1">
-                                            <div className="row">
-                                                <div className="col-sm-4 text-primary">결제번호</div>
-                                                <div className="col-sm-8 text-secondary">{payment.paymentNo}</div>
-                                            </div>
-                                            <div className="row">
-                                                <div className="col-sm-4 text-primary">거래번호</div>
-                                                <div className="col-sm-8 text-secondary">{payment.paymentTid}</div>
-                                            </div>
-                                            <div className="row">
-                                                <div className="col-sm-4 text-primary">구매상품명</div>
-                                                <div className="col-sm-8 text-secondary">{payment.paymentName}</div>
-                                            </div>
-                                            <div className="row">
-                                                <div className="col-sm-4 text-primary">구매금액</div>
-                                                <div className="col-sm-8 text-secondary">
-                                                    {numberWithComma(payment.paymentTotal)}원
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* 환불 버튼 – 오른쪽 벽 고정 */}
-                                        <div className="ms-auto d-flex justify-content-end" style={{ width: 250 }}>
-                                            <button className={`btn btn-outline-${payment.paymentRemain !== 0 ? "danger" : "secondary"} ms-3`} onClick={cancelAll}
-                                                disabled={isRefund === false || payment.paymentRemain === 0}>
-                                                <FaXmark />
-                                                <span>전체 환불</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </>
-
-                )}
-            </div>
-        </div>
-
-        <hr className="my-3" />
-
-        <div
-            className="fade-item"
-            style={{ animationDelay: `${0.03}s` }}
-        >
-            <div className="d-flex align-items-center">
-                {paymentDetailList === null ? (
-
-                    <div className="fw-bold" style={{ width: 220 }}>
-                        결제 상세 Loading...
-                    </div>
-
-                ) : (
-
-                    <>
-                        <div className="d-flex flex-column w-100">
-                            {paymentDetailList.map((paymentDetail, i) => (
-
-                                <div
-                                    key={i}
-                                    className="fade-item w-100 mb-1"
-                                    style={{ animationDelay: `${i * 0.03}s` }}
-                                >
-                                    <div className="p-4 shadow rounded d-flex align-items-start w-100">
-
-                                        {/* 상품명 영역 */}
-                                        <div className="fw-bold me-3" style={{ width: 220 }}>
-                                            {paymentDetail.paymentDetailItemName}
-                                        </div>
-
-                                        {/* 중간 정보 + 버튼을 가로로 묶는 핵심 영역 */}
-                                        <div className="d-flex align-items-center flex-grow-1">
-
-                                            {/* 텍스트 3줄 영역 (가로폭 크게) */}
-                                            <div className="d-flex flex-column gap-1 flex-grow-1">
-                                                <div className="row">
-                                                    <div className="col-sm-4 text-primary">상세번호</div>
-                                                    <div className="col-sm-8 text-secondary">
-                                                        {paymentDetail.paymentDetailNo}
-                                                    </div>
-                                                </div>
-
-                                                <div className="row">
-                                                    <div className="col-sm-4 text-primary">판매가격</div>
-                                                    <div className="col-sm-8 text-secondary">
-                                                        {numberWithComma(
-                                                            paymentDetail.paymentDetailItemPrice * paymentDetail.paymentDetailQty
-                                                        )}원
-                                                        (
-                                                        {numberWithComma(paymentDetail.paymentDetailItemPrice)}원
-                                                        x
-                                                        {paymentDetail.paymentDetailQty}개
-                                                        )
-                                                    </div>
-                                                </div>
-
-                                                <div className="row">
-                                                    <div className="col-sm-4 text-primary">결제상태</div>
-                                                    <div className={`col-sm-8 text-${paymentDetail.paymentDetailStatus === "승인" ? "secondary" : "danger"}`}>
-                                                        {paymentDetail.paymentDetailStatus}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* 환불 버튼 – 오른쪽 벽 고정 */}
-                                            <div className="ms-auto d-flex justify-content-end" style={{ width: 250 }}>
-                                                <button type="button" className={`btn btn-outline-${paymentDetail.paymentDetailStatus === "승인" ? "danger" : "secondary"}`}
-                                                    onClick={e => cancelUnit(paymentDetail)} disabled={isRefund === false || paymentDetail.paymentDetailStatus !== "승인"}
-                                                >
-                                                    <FaXmark />
-                                                    <span className="ms-2">이 아이템 환불</span>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                            ))}
-                        </div>
-                    </>
-
-                )}
-            </div>
-        </div>
-
-        <hr className="my-3" />
-
-        <div
-            className="fade-item"
-            style={{ animationDelay: `${0.03}s` }}
-        >
-            <div className="d-flex align-items-center">
-                {kakaopayInfo === null ? (
-
-                    <div className="fw-bold" style={{ width: 220 }}>
-                        카카오페이 정보 Loadin
-                        g...
-                    </div>
-
-                ) : (
-
-                    <>
-                        <div className="d-flex flex-column w-100">
-
-                            <div
-                                className="fade-item w-100 mb-1"
-                                style={{ animationDelay: `${0.03}s` }}
-                            >
-                                <div className="p-4 shadow rounded d-flex align-items-start w-100">
-
-                                    {/* 상품명 영역 */}
-                                    <div className="fw-bold me-3" style={{ width: 220 }}>
-                                        카카오페이 정보
-                                    </div>
-
-                                    {/* 중간 정보 + 버튼을 가로로 묶는 핵심 영역 */}
-                                    <div className="d-flex align-items-center flex-grow-1">
-
-                                        {/* 텍스트 3줄 영역 (가로폭 크게) */}
-                                        <div className="d-flex flex-column gap-1 flex-grow-1">
-                                            <div className="row">
-                                                <div className="col-sm-3 text-primary">거래번호</div>
-                                                <div className="col-sm-9 text-secondary">{kakaopayInfo.tid}</div>
-                                            </div>
-                                            <div className="row">
-                                                <div className="col-sm-3 text-primary">가맹점코드</div>
-                                                <div className="col-sm-9 text-secondary">{kakaopayInfo.cid}</div>
-                                            </div>
-                                            <div className="row">
-                                                <div className="col-sm-3 text-primary">결제 상태</div>
-                                                <div className="col-sm-9 text-secondary">{paymentStatus(kakaopayInfo.status)}</div>
-                                            </div>
-                                            <div className="row">
-                                                <div className="col-sm-3 text-primary">주문번호</div>
-                                                <div className="col-sm-9 text-secondary">{kakaopayInfo.partner_order_id}</div>
-                                            </div>
-                                            <div className="row">
-                                                <div className="col-sm-3 text-primary">주문자</div>
-                                                <div className="col-sm-9 text-secondary">{kakaopayInfo.partner_user_id}</div>
-                                            </div>
-                                            <div className="row">
-                                                <div className="col-sm-3 text-primary">구매 금액</div>
-                                                <div className="col-sm-9 text-secondary">
-                                                    <div className="custom-overlay d-flex align-items-center">
-                                                        <span className="">
-                                                            {numberWithComma(kakaopayInfo.amount.total)}원
-                                                        </span>
-                                                        <FaQuestionCircle className="text-primary ms-2" />
-                                                        <div className="custom-overlay-popup">
-                                                            <div className="row">
-                                                                <div className="col-6">비과세액</div>
-                                                                <div className="col-6">{numberWithComma(kakaopayInfo.amount.tax_free)}원</div>
-                                                            </div>
-                                                            <div className="row">
-                                                                <div className="col-6">부가세액</div>
-                                                                <div className="col-6">{numberWithComma(kakaopayInfo.amount.vat)}원</div>
-                                                            </div>
-                                                            <div className="row">
-                                                                <div className="col-6">포인트 사용</div>
-                                                                <div className="col-6">{numberWithComma(kakaopayInfo.amount.point)}원</div>
-                                                            </div>
-                                                            <div className="row">
-                                                                <div className="col-6">할인 적용</div>
-                                                                <div className="col-6">{numberWithComma(kakaopayInfo.amount.discount)}원</div>
-                                                            </div>
-                                                            <div className="row">
-                                                                <div className="col-6">컵 보증금</div>
-                                                                <div className="col-6">{numberWithComma(kakaopayInfo.amount.green_deposit)}원</div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="row">
-                                                <div className="col-sm-3 text-primary">취소 금액</div>
-                                                <div className="col-sm-9 text-secondary">
-                                                    {kakaopayInfo.cancel_amount !== null ? (
-                                                        <div className="custom-overlay d-flex align-items-center">
-                                                            <span className="">
-                                                                {numberWithComma(kakaopayInfo.amount.total)}원
-                                                            </span>
-                                                            <FaQuestionCircle className="text-primary ms-2" />
-                                                            <div className="custom-overlay-popup">
-                                                                <div className="row">
-                                                                    <div className="col-6">비과세액</div>
-                                                                    <div className="col-6">{numberWithComma(kakaopayInfo.cancel_amount.tax_free)}원</div>
-                                                                </div>
-                                                                <div className="row">
-                                                                    <div className="col-6">부가세액</div>
-                                                                    <div className="col-6">{numberWithComma(kakaopayInfo.cancel_amount.vat)}원</div>
-                                                                </div>
-                                                                <div className="row">
-                                                                    <div className="col-6">포인트 사용</div>
-                                                                    <div className="col-6">{numberWithComma(kakaopayInfo.cancel_amount.point)}원</div>
-                                                                </div>
-                                                                <div className="row">
-                                                                    <div className="col-6">할인 적용</div>
-                                                                    <div className="col-6">{numberWithComma(kakaopayInfo.cancel_amount.discount)}원</div>
-                                                                </div>
-                                                                <div className="row">
-                                                                    <div className="col-6">컵 보증금</div>
-                                                                    <div className="col-6">{numberWithComma(kakaopayInfo.cancel_amount.green_deposit)}원</div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    ) : "없음"}
-                                                </div>
-                                            </div>
-                                            <div className="row">
-                                                <div className="col-sm-3 text-primary">취소 가능 금액</div>
-                                                <div className="col-sm-9 text-secondary">
-                                                    {kakaopayInfo.cancel_available_amount !== null ? (
-                                                        <div className="custom-overlay d-flex align-items-center">
-                                                            {numberWithComma(kakaopayInfo.cancel_available_amount.total)}원
-                                                            <FaQuestionCircle className="text-primary ms-2" />
-                                                            <div className="custom-overlay-popup">
-                                                                <div className="row">
-                                                                    <div className="col-6">비과세액</div>
-                                                                    <div className="col-6">{numberWithComma(kakaopayInfo.cancel_available_amount.tax_free)}원</div>
-                                                                </div>
-                                                                <div className="row">
-                                                                    <div className="col-6">부가세액</div>
-                                                                    <div className="col-6">{numberWithComma(kakaopayInfo.cancel_available_amount.vat)}원</div>
-                                                                </div>
-                                                                <div className="row">
-                                                                    <div className="col-6">포인트 사용</div>
-                                                                    <div className="col-6">{numberWithComma(kakaopayInfo.cancel_available_amount.point)}원</div>
-                                                                </div>
-                                                                <div className="row">
-                                                                    <div className="col-6">할인 적용</div>
-                                                                    <div className="col-6">{numberWithComma(kakaopayInfo.cancel_available_amount.discount)}원</div>
-                                                                </div>
-                                                                <div className="row">
-                                                                    <div className="col-6">컵 보증금</div>
-                                                                    <div className="col-6">{numberWithComma(kakaopayInfo.cancel_available_amount.green_deposit)}원</div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    ) : "없음"}
-                                                </div>
-                                            </div>
-                                            <div className="row">
-                                                <div className="col-sm-3 text-primary">결제 이름</div>
-                                                <div className="col-sm-9 text-secondary">{kakaopayInfo.item_name}</div>
-                                            </div>
-                                            <div className="row">
-                                                <div className="col-sm-3 text-primary">결제 코드</div>
-                                                <div className="col-sm-9 text-secondary">
-                                                    {kakaopayInfo.item_code || "없음"}
-                                                </div>
-                                            </div>
-                                            <div className="row">
-                                                <div className="col-sm-3 text-primary">결제 수량</div>
-                                                <div className="col-sm-9 text-secondary">{kakaopayInfo.quantity}</div>
-                                            </div>
-                                            <div className="row">
-                                                <div className="col-sm-3 text-primary">결제 시작시각</div>
-                                                <div className="col-sm-9 text-secondary">{formatDateTime(kakaopayInfo.created_at)}</div>
-                                            </div>
-                                            <div className="row">
-                                                <div className="col-sm-3 text-primary">결제 승인시각</div>
-                                                <div className="col-sm-9 text-secondary">{formatDateTime(kakaopayInfo.approved_at)}</div>
-                                            </div>
-                                            <div className="row">
-                                                <div className="col-sm-3 text-primary">결제 취소시각</div>
-                                                <div className="col-sm-9 text-secondary">
-                                                    {(kakaopayInfo.canceled_at !== null) ? formatDateTime(kakaopayInfo.canceled_at) : "없음"}
-                                                </div>
-                                            </div>
-                                            <div className="row">
-                                                <div className="col-sm-3 text-primary">결제 카드정보</div>
-                                                <div className="col-sm-9 text-secondary">
-                                                    {kakaopayInfo.selected_card_info !== null ? (<>
-                                                        <div className="row">
-                                                            <div className="col-6">카드사</div>
-                                                            <div className="col-6">{kakaopayInfo.selected_card_info.card_corp_name}</div>
-                                                        </div>
-                                                        <div className="row">
-                                                            <div className="col-6">카드BIN</div>
-                                                            <div className="col-6">{kakaopayInfo.selected_card_info.bin}</div>
-                                                        </div>
-                                                        <div className="row">
-                                                            <div className="col-6">할부</div>
-                                                            <div className="col-6">
-                                                                {kakaopayInfo.selected_card_info.install_month > 0 ? "Y" : "N"}
-                                                                {kakaopayInfo.selected_card_info.install_month > 0 && (<>
-                                                                    (
-                                                                    무이자할부 : {kakaopayInfo.selected_card_info.interest_free_install},
-                                                                    할부기간 : {kakaopayInfo.selected_card_info.install_month}개월
-                                                                    )
-                                                                </>)}
-                                                            </div>
-                                                        </div>
-                                                    </>) : "없음"}
-                                                </div>
-                                            </div>
-                                            <div className="row">
-                                                <div className="col-sm-3 text-primary">결제 히스토리</div>
-                                                <div className="col-sm-9 text-secondary">
-                                                    {/* key는 애매할 경우 index를 쓸 수 있다(단, 읽기만 할 때 사용하는걸 권장) */}
-                                                    {kakaopayInfo.payment_action_details.map((detail, index) => (
-                                                        <div className="row mb-4" key={index}>
-                                                            <div className="col p-2 border rounded">
-
-                                                                <div className="row">
-                                                                    <div className="col-6">요청번호</div>
-                                                                    <div className="col-6">{detail.aid}</div>
-                                                                </div>
-                                                                <div className="row">
-                                                                    <div className="col-6">요청시각</div>
-                                                                    <div className="col-6">{formatDateTime(detail.approved_at)}</div>
-                                                                </div>
-                                                                <div className="row">
-                                                                    <div className="col-6">금액</div>
-                                                                    <div className="col-6">{numberWithComma(detail.amount)}원</div>
-                                                                </div>
-                                                                <div className="row">
-                                                                    <div className="col-6">유형</div>
-                                                                    <div className="col-6">{paymentType(detail.payment_action_type)}</div>
-                                                                </div>
-                                                                <div className="row">
-                                                                    <div className="col-6">메모</div>
-                                                                    <div className="col-6">{detail.payload}</div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* 환불 버튼 – 오른쪽 벽 고정 */}
-                                        <div className="ms-auto d-flex justify-content-end" style={{ width: 250 }}>
-
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </>
-
-                )}
-            </div>
-        </div>
-    </>);
+    );
 }

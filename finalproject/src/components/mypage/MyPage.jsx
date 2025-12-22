@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { FaTrash, FaUser, FaHeart } from "react-icons/fa"; 
+import { useState, useEffect, useCallback, useRef } from "react";
+import { FaTrash, FaUser, FaHeart, FaPen, FaCamera } from "react-icons/fa";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AiOutlineSchedule } from "react-icons/ai";
 import { MdPayment } from "react-icons/md";
@@ -26,13 +26,16 @@ export default function MyPage() {
     // 이동 도구
     const navigate = useNavigate();
 
+    // 파일 업로드를 위한 ref
+    const fileInputRef = useRef(null);
+
     // jotai state
     const [loginId, setloginId] = useAtom(loginIdState);
     const [loginLevel, setLoginLevel] = useAtom(loginLevelState);
     const [accessToken, setAccessToken] = useAtom(accessTokenState);
     const [logincomplete, setLoginComplete] = useAtom(loginCompleteState);
     const isLogin = useAtomValue(loginState);
-    const clearLogin = useSetAtom(clearLoginState); 
+    const clearLogin = useSetAtom(clearLoginState);
 
     // 링크 공통 스타일
     const linkBaseStyle = {
@@ -81,10 +84,9 @@ export default function MyPage() {
 
     const loadData = useCallback(async () => {
         try {
-            // [중요] 여기서 토큰을 이용해 내 정보를 다 가져옴
             const resp = await axios.get("/account/mypage");
             setMyinfo(resp.data);
-            
+
             if (resp.data.attachmentNo) {
                 setProfileUrl(`http://localhost:8080/attachment/download?attachmentNo=${resp.data.attachmentNo}`);
             } else {
@@ -94,6 +96,48 @@ export default function MyPage() {
         catch (e) {
             console.log("정보 불러오기 실패");
         }
+    }, []);
+
+    // 프로필 이미지 수정 핸들러
+    const handleProfileImage = useCallback(async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // FormData
+        const formData = new FormData();
+        formData.append("attach", file);
+
+        try {
+            const resp = await axios.post("/account/profile", formData);
+            if (resp) loadData();
+
+            Swal.fire({
+                icon: 'success',
+                title: '프로필 변경 완료',
+                text: '프로필 이미지가 성공적으로 변경되었습니다.',
+                confirmButtonColor: '#78C2AD',
+                timer: 1500,
+                showConfirmButton: false
+            });
+
+        }
+        catch (error) {
+            console.error("프로필 이미지 업로드 실패", error);
+            Swal.fire({
+                icon: 'error',
+                title: '변경 실패',
+                text: '이미지 업로드 중 오류가 발생했습니다.',
+                confirmButtonColor: '#78C2AD'
+            });
+        }
+
+        finally {
+            // input 초기화 (같은 파일 다시 선택 가능하도록)
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
+        }
+
     }, []);
 
     const deleteAccount = useCallback(async (e) => {
@@ -177,15 +221,50 @@ export default function MyPage() {
                     <div className="pt-5 px-3">
                         {/* 프로필 영역 */}
                         <div className="text-center mb-5">
+                            <div className="position-relative d-inline-block">
                             <img src={profileUrl} className="rounded-circle border shadow-sm"
                                 style={{ width: "120px", height: "120px", objectFit: "cover" }}
                                 onError={(e) => {
-                                    e.target.src = "/images/default-profile.jpg"; 
+                                    e.target.src = "/images/default-profile.jpg";
                                 }}
                                 alt="프로필" />
+
+                            {/* [추가] 숨겨진 파일 입력창 */}
+                            <input
+                                type="file"
+                                style={{ display: "none" }}
+                                ref={fileInputRef}
+                                onChange={handleProfileImage}
+                                accept="image/*"
+                            />
+
+                            {/* [수정] 사진 변경 버튼 (카메라 아이콘으로 변경) */}
+                            <button
+                                onClick={() => fileInputRef.current.click()} // 클릭 시 파일 선택창 열기
+                                className="btn btn-sm position-absolute bottom-0 end-0 rounded-circle border shadow-sm d-flex align-items-center justify-content-center"
+                                style={{
+                                    width: "36px",
+                                    height: "36px",
+                                    backgroundColor: "white",
+                                    color: "#555",
+                                    transform: "translate(0, 0)", // 위치 미세 조정
+                                }}
+                                title="프로필 사진 변경"
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = "#f8f9fa";
+                                    e.currentTarget.style.color = "#333";
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = "white";
+                                    e.currentTarget.style.color = "#555";
+                                }}
+                            >
+                                <FaCamera size={16} />
+                            </button>
+                            </div>
                             <h5 className="fw-bold m-0 mt-2" style={{ color: "#333", fontSize: "1.1rem" }}>{myInfo.accountNickname}</h5>
                         </div>
-                        
+
                         {/* 메뉴 링크들 */}
                         <ul className="nav flex-column">
                             {[
@@ -216,7 +295,7 @@ export default function MyPage() {
                             })}
                         </ul>
                     </div>
-                    
+
                     {/* 하단 회원탈퇴 버튼 */}
                     <div className="p-3 mb-4 mt-auto">
                         <hr className="mb-4" style={{ borderColor: PALETTE.border }} />
@@ -234,7 +313,7 @@ export default function MyPage() {
                                 transition: "all 0.2s ease"
                             }}
                             onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = "#e03131"; 
+                                e.currentTarget.style.backgroundColor = "#e03131";
                                 e.currentTarget.style.color = "white";
                             }}
                             onMouseLeave={(e) => {
