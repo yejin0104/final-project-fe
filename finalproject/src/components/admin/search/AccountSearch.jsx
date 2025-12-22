@@ -4,6 +4,7 @@ import { useCallback, useState, useEffect } from "react";
 import { FaMagnifyingGlass, FaUserGear, FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import { PiTildeBold } from "react-icons/pi";
 import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 
 export default function AccountSearch() {
     // 테마 설정 (기존 코드에서 참조하던 theme 객체 정의)
@@ -93,6 +94,31 @@ export default function AccountSearch() {
         }));
     }, []);
 
+    const dropAdmin = useCallback(async (account) => {
+        Swal.fire({
+            title: "아이디를 삭제하시겠습니까?",
+            text: "삭제 후에는 복구가 불가능합니다.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "삭제",
+            cancelButtonText: "취소"
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: "삭제 완료!",
+                    icon: "success"
+                });
+                await axios.post("/account/dropAdmin", { 
+                    accountId: account.accountId 
+                });
+                handleSearch();
+            }
+        });
+        
+    })
+
     return (
         <div className="container-fluid py-5 px-4" style={{ backgroundColor: "#fbfcfd", minHeight: "100vh" }}>
             {/* 타이틀 영역 */}
@@ -101,8 +127,7 @@ export default function AccountSearch() {
                     <FaUserGear size={30} />
                 </div>
                 <div>
-                    <h2 className="fw-bold mb-0">Account Management</h2>
-                    <p className="text-muted mb-0 small">상세 조건 검색 시 페이징 처리가 지원됩니다.</p>
+                    <h2 className="fw-bold mb-0">회원 관리</h2>
                 </div>
             </div>
 
@@ -198,7 +223,8 @@ export default function AccountSearch() {
                                             </td>
                                             <td className="text-center small text-secondary">{account.accountJoin}</td>
                                             <td className="pe-4 text-center">
-                                                <button className="btn btn-outline-light btn-sm text-dark border-light-subtle px-3">수정</button>
+                                                <button className="btn btn-outline-danger btn-sm text-dark border-light-subtle px-3"
+                                                    onClick={e => dropAdmin(account)}>탈퇴</button>
                                             </td>
                                         </tr>
                                     );

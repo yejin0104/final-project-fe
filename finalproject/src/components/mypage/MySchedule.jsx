@@ -8,6 +8,7 @@ import { Link, useOutletContext, useParams } from "react-router-dom";
 import { useAtom, useAtomValue } from "jotai";
 import { loginIdState } from "../../utils/jotai";
 import "./ScheduleListV3.css";
+import Swal from "sweetalert2";
 
 
 export default function MySchedule() {
@@ -35,6 +36,7 @@ export default function MySchedule() {
   const [schedule, setSchedule] = useState([]);
   const [selectDay, setSelectDay] = useState(null);
 
+
   useEffect(() => {
 
     if (!myInfo.accountId) return;
@@ -47,6 +49,44 @@ export default function MySchedule() {
     }
     loadData();
   }, [myInfo.accountId]);
+
+  const deleteSchedule = useCallback(async (scheduleNo) => {
+    Swal.fire({
+      title: "일정 삭제하시겠습니까?",
+      text: "삭제 후에는 복구가 불가능합니다.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "삭제",
+      cancelButtonText: "취소"
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          // 1. 서버에 삭제 요청
+          await axios.delete(`/schedule/delete/${scheduleNo}`);
+
+          // 2. 화면 상태 갱신 (filter를 사용해 삭제된 번호만 제외)
+          setSchedule(prev => prev.filter(s => s.scheduleNo !== scheduleNo));
+
+          // 3. 성공 알림
+          Swal.fire({
+            title: "삭제 완료!",
+            icon: "success",
+            timer: 1500, // 1.5초 후 자동으로 닫힘
+            showConfirmButton: false
+          });
+        } catch (error) {
+          // 에러 처리
+          Swal.fire({
+            title: "삭제 실패",
+            text: "오류가 발생했습니다.",
+            icon: "error"
+          });
+        }
+      }
+    });
+  }, [])
 
   const todayBtn = useCallback((day) => {
     setSelectDay(day.format("YYYY-MM-DD"));
@@ -200,48 +240,69 @@ export default function MySchedule() {
       <div className="row mt-4 g-3">
         {schedule.map((s) => (
           <div key={s.scheduleNo} className="col-12 col-md-6">
-            <Link
-              to={`/schedulePage/${s.scheduleNo}`}
-              className="text-decoration-none text-dark d-block h-100"
-            >
-              {/* ✅ 여기서도 row/col 대신 flex 카드 */}
-              <div className="tp-card shadow-sm p-3 d-flex gap-3 h-100 align-items-stretch">
-                <div className="tp-img" style={{ width: 160 }}>
-                  <span className={`tp-state shadow-sm ${stateBadgeClass(s.scheduleState)}`}>
-                    {s.scheduleState}
-                  </span>
+            {/* 부모 컨테이너에 position-relative 추가 */}
+            <div className="position-relative h-100">
 
-                  <img
-                    className="w-100 border shadow-sm"
-                    src="https://www.visitbusan.net/uploadImgs/files/hqimgfiles/20200326112404471_thumbL"
-                    alt=""
-                  />
-                </div>
+              {/* X 버튼 추가 */}
+              <button
+                className="btn btn-sm btn-link text-secondary position-absolute"
+                style={{
+                  top: "5px",
+                  right: "5px",
+                  zIndex: 10, // 카드보다 위에 오도록
+                  textDecoration: "none"
+                }}
+                onClick={(e) => {
+                  e.preventDefault(); // 링크 이동 방지
+                  e.stopPropagation(); // 이벤트 버블링 방지
+                  // 여기에 삭제 함수나 로직 추가 (예: onDelete(s.scheduleNo))
+                  deleteSchedule(s.scheduleNo)
+                }}
+              >
+                <i className="fa-solid fa-xmark fs-5"></i> {/* 폰트어썸 예시 (없으면 'X'로 대체) */}
+                <span className="text-dark">✕</span>
+              </button>
 
-                <div className="d-flex flex-column justify-content-center flex-grow-1">
-                  <h5 className="fw-semibold tp-title text-truncate mb-2">
-                    {s.scheduleName}
-                  </h5>
-
-                  <div className="tp-meta small mb-2 text-truncate">
-                    {s.unitFirst?.scheduleUnitContent ? (
-                      <>
-                        {s.unitFirst.scheduleUnitContent}
-                        {s.unitCount > 1 && ` 외 ${s.unitCount - 1}개`}
-                      </>
-                    ) : (
-                      "세부 일정 없음"
-                    )}
-                  </div>
-
-                  <div>
-                    <span className="badge bg-white text-dark border shadow-sm">
-                      {dayjs(s.scheduleStartDate).format("MM/DD(dd) A h:mm")}
+              <Link
+                to={`/schedulePage/${s.scheduleNo}`}
+                className="text-decoration-none text-dark d-block h-100"
+              >
+                <div className="tp-card shadow-sm p-3 d-flex gap-3 h-100 align-items-stretch">
+                  <div className="tp-img" style={{ width: 160 }}>
+                    <span className={`tp-state shadow-sm ${stateBadgeClass(s.scheduleState)}`}>
+                      {s.scheduleState}
                     </span>
+                    <img
+                      className="w-100 border shadow-sm"
+                      src="https://www.visitbusan.net/uploadImgs/files/hqimgfiles/20200326112404471_thumbL"
+                      alt=""
+                    />
+                  </div>
+
+                  <div className="d-flex flex-column justify-content-center flex-grow-1">
+                    <h5 className="fw-semibold tp-title text-truncate mb-2 pe-3"> {/* X 버튼 공간을 위해 pe-3 추가 */}
+                      {s.scheduleName}
+                    </h5>
+
+                    <div className="tp-meta small mb-2 text-truncate">
+                      {s.unitFirst?.scheduleUnitContent ? (
+                        <>
+                          {s.unitFirst.scheduleUnitContent}
+                          {s.unitCount > 1 && ` 외 ${s.unitCount - 1}개`}
+                        </>
+                      ) : (
+                        "세부 일정 없음"
+                      )}
+                    </div>
+                    <div>
+                      <span className="badge bg-white text-dark border shadow-sm">
+                        {dayjs(s.scheduleStartDate).format("MM/DD(dd) A h:mm")}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+            </div>
           </div>
         ))}
       </div>

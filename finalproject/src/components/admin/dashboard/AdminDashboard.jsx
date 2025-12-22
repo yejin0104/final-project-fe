@@ -97,7 +97,6 @@ export default function AdminDashboard() {
                                 <th className="border-0">연락처 / 이메일</th>
                                 <th className="border-0 text-center">일정 현황</th>
                                 <th className="border-0 text-center">가입일</th>
-                                <th className="pe-4 border-0 text-center">상태</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -138,13 +137,6 @@ export default function AdminDashboard() {
                                             </td>
                                             <td className="text-center small text-secondary">
                                                 {account.accountJoin ? account.accountJoin.split(' ')[0] : "-"}
-                                            </td>
-                                            <td className="pe-4 text-center">
-                                                <button className="btn btn-sm rounded-3 border-0 px-3" 
-                                                        style={{ backgroundColor: "#f1f3f5", color: "#666", fontSize: "0.75rem", fontWeight: "bold" }}
-                                                        onClick={() => handleMemberDetail(account.accountId)}>
-                                                    상세
-                                                </button>
                                             </td>
                                         </tr>
                                     )

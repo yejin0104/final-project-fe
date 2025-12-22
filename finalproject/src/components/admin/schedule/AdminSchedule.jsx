@@ -175,7 +175,6 @@ export default function AdminSchedule() {
                                         </td>
                                         <td style={{ padding: "1.2rem 1rem", textAlign: "center" }}>
                                             <div style={{ display: "flex", justifyContent: "center", gap: "10px", fontSize: "0.85rem" }}>
-                                                <span title="조회수"><FaEye color="#aaa" /> {item.scheduleView}</span>
                                                 <span title="좋아요"><FaHeart color="#ff6b6b" /> {item.scheduleLike}</span>
                                             </div>
                                         </td>

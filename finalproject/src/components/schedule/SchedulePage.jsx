@@ -125,7 +125,6 @@ export default function SchedulePage() {
 
     // Marker 추가
     const addMarker = useCallback(async (latlng) => {
-        if (!isOwner) return;
         const id = uuidv4();
         const address = { x: latlng.getLng(), y: latlng.getLat() };
 
