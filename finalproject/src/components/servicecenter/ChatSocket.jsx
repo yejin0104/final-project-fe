@@ -33,7 +33,7 @@ export default function ChatSocket({ isChatOpen, onChatClose, currentChatNo }) {
     const [history, setHistory] = useState([]);
     const [last, setLast] = useState(null);
 
-    const stompClientRef = useRef(null);
+    const scrollContainerRef = useRef(null);
 
     // --- 메시지 업데이트 로직 함수화 ---
     const updateMessages = useCallback((messageData) => {
@@ -254,6 +254,13 @@ export default function ChatSocket({ isChatOpen, onChatClose, currentChatNo }) {
         }
     }, []);
 
+    useEffect(() => {
+        if (scrollContainerRef.current) {
+            const container = scrollContainerRef.current;
+            container.scrollTop = container.scrollHeight;
+        }
+    }, [history]);
+
     return (
         <>
             <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }} role="dialog">
@@ -286,22 +293,26 @@ export default function ChatSocket({ isChatOpen, onChatClose, currentChatNo }) {
 
                                 {/* 3. 통합 메시지 출력 */}
                                 {history.map((m, index) => {
-                                    // 내 메시지인지 확인 (실시간 sender 또는 DB messageSender)
                                     const isMyMsg = (m.messageSender === loginId);
-                                    // const senderName = m.sender || m.messageSender;
-                                    // const content = m.text || m.messageContent; // text 필드와 messageContent 필드 모두 대응
-                                    const senderName = m.messageSender;
                                     const content = m.messageContent;
 
-                                    // 일반 채팅 (TALK)
                                     if (m.messageType === "TALK") {
                                         return (
-                                            <div key={index} className={`d-flex mb-3 ${isMyMsg ? 'justify-content-end' : 'justify-content-start'}`}>
-                                                <div className={`p-2 rounded ${isMyMsg ? 'bg-info text-white' : 'bg-light border'}`} style={{ maxWidth: '80%' }}>
-                                                    {isSenderVisible(m, history[index - 1]) && (
-                                                        <small className="fw-bold d-block mb-1">{senderName}</small>
-                                                    )}
-                                                    <div style={{ wordBreak: 'break-all' }}>{content}</div>
+                                            <div
+                                                key={index}
+                                                className={`d-flex mb-3 ${isMyMsg ? 'justify-content-end' : 'justify-content-start'}`}
+                                            >
+                                                <div
+                                                    className="p-2 rounded border"
+                                                    style={{
+                                                        maxWidth: '80%',
+                                                        backgroundColor: isMyMsg ? '#f0f0f0' : '#1890ff',
+                                                        color: isMyMsg ? 'black' : 'white',
+                                                        boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+                                                    }}
+                                                >
+                                                    <div style={{ wordBreak: 'break-word' }}>{content}</div>
+
                                                     <small className="opacity-75" style={{ fontSize: '10px' }}>
                                                         {formatTime(m.time || m.messageTime)}
                                                     </small>
@@ -309,17 +320,20 @@ export default function ChatSocket({ isChatOpen, onChatClose, currentChatNo }) {
                                             </div>
                                         );
                                     }
-                                    
-                                    // 시스템/경고 메시지
+
                                     if (m.messageType === "warning" || m.messageType === "system") {
                                         return (
                                             <div className="text-center my-2" key={index}>
-                                                <span className="badge bg-secondary opacity-50 small">{content}</span>
+                                                <span className="badge bg-secondary opacity-50 small">
+                                                    {m.messageContent}
+                                                </span>
                                             </div>
                                         );
                                     }
+
                                     return null;
                                 })}
+
                             </div>
                         </div>
 
@@ -331,7 +345,7 @@ export default function ChatSocket({ isChatOpen, onChatClose, currentChatNo }) {
                             <div className="input-group">
                                 <input type="text" className="form-control" value={input}
                                     onChange={(e) => setInput(e.target.value)}
-                                    // onKeyDown={(e) => {if (e.key === 'Enter') {handleSend();}}}
+                                    onKeyDown={(e) => {if (e.key === 'Enter') {handleSend();}}}
                                     placeholder="메시지를 입력하세요..."
                                     disabled={wsConnectionState !== 'connected'} />
                                 <button className="btn btn-success" onClick={handleSend}
@@ -343,120 +357,4 @@ export default function ChatSocket({ isChatOpen, onChatClose, currentChatNo }) {
             </div>
         </>
     );
-
-    // return (
-    //     <>
-    //         <div className="modal fade show d-block" tabIndex="-1"
-    //             style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }} role="dialog">
-    //             <div className="modal-dialog modal-dialog-centered modal-sm"
-    //                 style={{ maxWidth: '400px', margin: 'auto' }}>
-    //                 <div className="modal-content">
-    //                     <div className="modal-header bg-primary text-white p-3">
-    //                         <h5 className="modal-title fs-5">1:1 고객지원 채팅</h5>
-    //                         <button type="button" className="btn-close btn-close-white"
-    //                             data-bs-dismiss="modal" aria-label="Close"
-    //                             onClick={() => { disconnectFromServer(client); onChatClose(); }} />
-    //                     </div>
-
-    //                     <div className="modal-body p-0" style={{ height: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-    //                         {(wsConnectionState !== 'connected') && (
-    //                             <div className={`alert ${wsConnectionState === 'disconnected' ? 'alert-danger' : 'alert-warning'} m-2 p-2 text-center`}>
-    //                                 {connectionMessage()}
-    //                                 {wsConnectionState === 'connecting' && <div className="spinner-border spinner-border-sm ms-2" role="status"></div>}
-    //                             </div>
-    //                         )}
-
-    //                         {/* <div className="p-3 flex-grow-1">
-    //                             {currentMessages.length > 0 ? (
-    //                                 currentMessages.map((msg, index) => (
-    //                                     <div key={index} className={`d-flex mb-2 ${msg.sender === loginId ? 'justify-content-end' : 'justify-content-start'}`}>
-    //                                         <div className={`p-2 rounded ${msg.sender === loginId ? 'bg-info text-white' : 'bg-light border'}`} style={{ maxWidth: '75%' }}>
-    //                                             <small className="fw-bold d-block mb-1">{msg.sender}</small>
-    //                                             {msg.text || msg.messageContent}
-    //                                         </div>
-    //                                     </div>
-    //                                 ))
-    //                             ) : (
-    //                                 // 메시지가 없을 때
-    //                                 <div className="text-center text-muted mt-5">
-    //                                     <p>💬</p>
-    //                                     <p>상담사 연결 대기 중입니다. 잠시만 기다려주세요.</p>
-    //                                 </div>
-    //                             )}
-    //                         </div> */}
-    //                         <div className="p-3 flex-grow-1">
-    //                             {/* 1. 상담사가 없을 때만 보여주는 안내 문구 (상시 노출 혹은 조건부) */}
-    //                             {history.filter(m => m.type === 'TALK' && m.sender !== loginId).length === 0 && (
-    //                                 <div className="alert alert-light text-center small mb-3">
-    //                                     상담사가 입장 전입니다. 메시지를 남겨주시면 곧 연결해 드리겠습니다.
-    //                                 </div>
-    //                             )}
-
-    //                             {/* 2. 메시지 목록은 항상 렌더링하도록 수정 */}
-    //                             {currentMessages.map((msg, index) => (
-    //                                 <div key={index} className={`d-flex mb-2 ${msg.sender === loginId ? 'justify-content-end' : 'justify-content-start'}`}>
-    //                                     <div className={`p-2 rounded ${msg.sender === loginId ? 'bg-info text-white' : 'bg-light border'}`} style={{ maxWidth: '75%' }}>
-    //                                         <small className="fw-bold d-block mb-1">{msg.sender}</small>
-    //                                         {/* 로그를 보니 필드명이 'text'입니다! */}
-    //                                         {msg.text} 
-    //                                     </div>
-    //                                 </div>
-    //                             ))}
-    //                         </div>
-    //                     </div>
-
-    //                     <div className="modal-footer p-2">
-    //                         <div className="input-group">
-    //                             <input type="text" className="form-control" value={input}
-    //                                 onChange={(e) => setInput(e.target.value)}
-    //                                 placeholder={wsConnectionState === 'connected' ? "메시지를 입력하세요..." : "연결 상태 확인 중..."}
-    //                                 disabled={wsConnectionState !== 'connected'} />
-    //                             <button type="button" className="btn btn-success"
-    //                                 onClick={handleSend}
-    //                                 disabled={wsConnectionState !== 'connected' || input.trim() === ''}>
-    //                                 전송
-    //                             </button>
-    //                         </div>
-    //                     </div>
-
-    //                     <div className="row mt-4">
-    //                         <div className="col message-wrapper">
-    //                             {history.map((m, index) => {//여기는 함수
-    //                                 if (m.type === "TALK") {//일반 채팅일 경우 보여줄 화면
-    //                                     return (
-    //                                         <div className={`message-block ${loginId === m.messageSender ? 'my' : ''}`} key={index}>
-    //                                             {isSenderVisible(m, history[index - 1]) === true && (
-    //                                                 <h5 className="text-primary">({m.messageSender})</h5>
-    //                                             )}
-
-    //                                             {m.messageContent || m.text}
-
-    //                                             {isTimeVisible(m, history[index + 1]) === true && (
-    //                                                 <div className="time">{formatTime(m.messageTime)}</div>
-    //                                             )}
-    //                                         </div>
-    //                                     );
-    //                                 }
-    //                                 if (m.messageType === "warning") {
-    //                                     return (
-    //                                         <div className="warning-block" key={m.messageNo}>{m.messageContent}</div>
-    //                                     );
-    //                                 }
-    //                                 if (m.messageType === "system") {
-    //                                     return (
-    //                                         <div className="system-block" key={m.messageNo}>{m.messageContent}</div>
-    //                                     );
-    //                                 }
-    //                             })}
-    //                         </div>
-    //                     </div>
-                        
-    //                     {last === false && (
-    //                         <button className="btn btn-outline-secondary w-100 my-4" onClick={loadMoreHistory}>메세지 더 보기</button>
-    //                     )}
-    //                 </div>
-    //             </div>
-    //         </div>
-    //     </>
-    // )
 }
