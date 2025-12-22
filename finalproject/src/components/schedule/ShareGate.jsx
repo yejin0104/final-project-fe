@@ -42,16 +42,15 @@ export function ShareGate() {
 
   }, [modal])
 
-  const closeModal = useCallback(() => {
-const closeModal = () => {
+const closeModal = useCallback(() => {
   if (!modal.current) return;
 
   const instance =
-    bootstrap.Modal.getOrCreateInstance(modal.current);
+    Modal.getInstance(modal.current) || Modal.getOrCreateInstance(modal.current);
 
   instance.hide();
-};
-  }, [modal])
+}, []);
+
 
   //
   useEffect(() => {

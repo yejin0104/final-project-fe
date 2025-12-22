@@ -1,0 +1,45 @@
+@startuml
+left to right direction
+
+actor "회원" as Member
+actor "비회원" as Guest
+actor "관리자" as Admin
+
+rectangle "카카오페이 결제 시스템" {
+
+  usecase "결제" as Pay
+  usecase "결제 내역 조회" as PayList
+  usecase "결제 내역 상세 조회" as PayDetail
+
+  usecase "환불 요청" as Refund
+  usecase "부분 환불" as PartialRefund
+  usecase "전체 환불" as FullRefund
+}
+
+' ===== 회원만 가능 =====
+Member --> Pay
+Member --> PayList
+Member --> PayDetail
+Member --> Refund
+
+' ===== 유스케이스 관계 =====
+Refund --> PayDetail : <<include>>
+PartialRefund --> Refund : <<extend>>
+FullRefund --> Refund : <<extend>>
+
+' ===== 제약 조건 =====
+note right of Refund
+구매 후 3일 이내만 환불 가능
+부분 환불 / 전체 환불 가능
+end note
+
+' ===== 비회원 / 관리자 불가 (설명용) =====
+note bottom of Guest
+비회원은 카카오페이 이용 불가
+end note
+
+note bottom of Admin
+관리자는 결제 기능 이용 불가
+end note
+
+@enduml

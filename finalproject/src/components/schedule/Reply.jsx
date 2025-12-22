@@ -10,7 +10,7 @@ import { accessTokenState, guestKeyState, guestState, loginIdState, loginLevelSt
 import { guestNicknameState } from "../../../../test-kakaopay/src/utils/jotai";
 
 
-export default function Reply({  reviews = [], memberList = [], loadReviews}) {
+export default function Reply({ reviews = [], memberList = [], loadReviews }) {
 
     const [input, setInput] = useState("");
     // const [replyList, setReplyList] = useState([]);
@@ -29,13 +29,15 @@ export default function Reply({  reviews = [], memberList = [], loadReviews}) {
     const loginLevel = useAtomValue(loginLevelState);
     const guestNickname = useAtomValue(guestNicknameState);
     const isGuest = useAtomValue(guestState);
-const isMember = memberList?.some(
-  (m) => String(m.accountId ?? "").trim() === String(loginId ?? "").trim()
-);   
-console.log("loginId =", loginId, typeof loginId);
-console.log("memberList ids =", memberList?.map(m => m.accountId));
-console.log("isMember =", memberList?.some(m => String(m.accountId).trim() === String(loginId).trim()));
-console.log("리스트확인",memberList);
+    const isMember = memberList?.some(
+        (m) => String(m.accountId ?? "").trim() === String(loginId ?? "").trim()
+    );
+    console.log("loginId =", loginId, typeof loginId);
+    console.log("memberList ids =", memberList?.map(m => m.accountId));
+    console.log("isMember =", memberList?.some(m => String(m.accountId).trim() === String(loginId).trim()));
+    const canWriteReply =
+        isMember || (loginLevel === "비회원" && !!accessToken?.trim());
+    console.log("리스트확인", memberList);
     const [profileUrl, setProfileUrl] = useState("/images/default-profile.jpg");
 
     const cleanData = useCallback(() => {
@@ -247,7 +249,7 @@ console.log("리스트확인",memberList);
                                     </div>
                                 </div>
 
-                                {/* 댓글에 포함된 세부일정 태그: "표시만" (선택 state랑 분리) */}
+                                {/* 댓글에 포함된 세부일정 태그: "표시만" (선택 state랑 분리)
                                 {editReviewNo !== reply.reviewNo && reply.scheduleUnitNoList?.filter(Boolean).length > 0 && (
                                     <div className="reply-tags-v3">
                                         {reply.scheduleUnitNoList
@@ -258,7 +260,7 @@ console.log("리스트확인",memberList);
                                                 </span>
                                             ))}
                                     </div>
-                                )}
+                                )} */}
 
 
                                 {/* 내용 or 수정모드 (기존 기능 유지) */}
@@ -313,7 +315,7 @@ console.log("리스트확인",memberList);
                         ))}
                     </div>
 
-                    {/* 아래 일정 리스트 (기존 기능 유지) */}
+                    {/* 아래 일정 리스트 (기존 기능 유지)
                     <div className="reply-selectwrap-v3">
                         <div className="reply-select-title-v3">일정 선택</div>
                         <div className="reply-select-list-v3">
@@ -333,7 +335,7 @@ console.log("리스트확인",memberList);
                                 );
                             })}
                         </div>
-                    </div>
+                    </div> */}
 
 
                     {/* 입력 바 (기존 기능 유지) */}
@@ -343,14 +345,14 @@ console.log("리스트확인",memberList);
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                         />
-                        <button type="button" className="reply-btn-v3 primary" onClick={sendData} disabled={!isMember  || !input.trim()}>
+                        <button type="button" className="reply-btn-v3 primary" onClick={sendData} disabled={!canWriteReply || !input.trim()}>
                             등록
                         </button>
                     </div>
-                    {!isMember  && (
+                    {!canWriteReply && (
                         <div className="text-muted small mt-2">
                             {isGuest
-                                ? "댓글 작성은 로그인 후 가능합니다."
+                                ? "비회원은 댓글 작성이 가능합니다. (토큰이 없으면 다시 링크로 접속해주세요)"
                                 : "참여자(멤버)만 댓글을 작성할 수 있어요."}
                         </div>
                     )}

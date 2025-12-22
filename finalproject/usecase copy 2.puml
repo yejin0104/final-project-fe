@@ -1,0 +1,36 @@
+@startuml
+left to right direction
+
+actor "비회원" as Guest
+actor "회원" as Member
+actor "관리자" as Admin
+
+rectangle "일정 관리 서비스" {
+
+  usecase "일정 조회" as ViewSchedule
+  usecase "댓글 작성" as Comment
+  usecase "후기 작성" as Review
+
+  usecase "일정 등록" as CreateSchedule
+  usecase "일정 수정" as UpdateSchedule
+  usecase "일정 삭제" as DeleteSchedule
+
+  usecase "링크 공유" as ShareLink
+}
+
+' ===== 비회원 =====
+Guest --> ViewSchedule
+Guest --> Comment
+
+' ===== 회원 =====
+Member --> CreateSchedule
+Member --> UpdateSchedule
+Member --> Comment
+Member --> Review
+Member --> ShareLink
+
+' ===== 관리자 =====
+Admin --> CreateSchedule
+Admin --> DeleteSchedule
+
+@enduml

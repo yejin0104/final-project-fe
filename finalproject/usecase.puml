@@ -1,0 +1,34 @@
+@startuml
+left to right direction
+
+actor "회원" as Member
+actor "상담사" as Counselor
+actor "비회원" as Guest
+
+rectangle "채팅 시스템" {
+  usecase "채팅(메시지 송수신)" as Chat
+  usecase "메시지 수신" as Receive
+  usecase "채팅방 나가기" as Leave
+  usecase "채팅방 생성" as CreateRoom
+  usecase "채팅방 목록 조회" as ListRooms
+}
+
+' 공통(회원/상담사)
+Member --> Chat
+Counselor --> Chat
+Member --> Receive
+Counselor --> Receive
+Member --> Leave
+Counselor --> Leave
+
+' 회원 전용
+Member --> CreateRoom
+
+' 상담사 전용
+Counselor --> ListRooms
+
+note bottom of Guest
+비회원은 채팅 기능 이용 불가
+end note
+
+@enduml

@@ -882,6 +882,7 @@ export default function SchedulePage() {
                                     reviews={comments}
                                     memberList={memberList}
                                      onDelete={deleteReview}
+                                     loadReviews={loadReviews}
                                 />
                             )}
 
@@ -896,6 +897,7 @@ export default function SchedulePage() {
                                         isGuest={guest}
                                          onDelete={deleteReview}
                                         onSubmit={handleSubmit}
+                                        loadReviews={loadReviews}
                                     />
                                 )
                             )}
