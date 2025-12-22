@@ -39,13 +39,15 @@ import Unauthorized from "./error/Unauthorized";
 {/* 관리자*/ }
 import AdminHome from "./admin/AdminHome";
 
-import AccountManager from "./admin/account/AccountManeger";
-import AccountSearch from "./admin/account/AccountSearch";
-import AccountDashboard from "./admin/account/AccountDashboard";
+import AccountSearch from "./admin/search/AccountSearch";
+import AccountDashboard from "./admin/dashboard/AdminDashboard";
 
 import Private from "./guard/Private";
 import Admin from "./guard/Admin";
 import Home from "./Home";
+import AdminSchedule from "./admin/schedule/AdminSchedule";
+import AdminCounselor from "./admin/counselor/AdminCounselor";
+import AdminPayment from "./admin/payment/AdminPayment";
 
 export default function Content() {
     return (<>
@@ -68,10 +70,11 @@ export default function Content() {
 
                     {/* 관리자 페이지 */}
                      <Route path="/admin" element={<Admin><AdminHome/></Admin>}>
-                        <Route path="/admin/accounts" element={<Admin><AccountManager/></Admin>}>
-                            <Route path="/admin/accounts/search" element={<Admin><AccountSearch/></Admin>}></Route>
-                            <Route path="/admin/accounts/dashboard" element={<Admin><AccountDashboard/></Admin>}></Route>
-                        </Route>
+                        <Route path="/admin/search" element={<Admin><AccountSearch/></Admin>}></Route>
+                        <Route path="/admin/dashboard" element={<Admin><AccountDashboard/></Admin>}></Route>
+                        <Route path="/admin/payments" element={<Admin><AdminPayment/></Admin>} />
+                        <Route path="/admin/schedules" element={<Admin><AdminSchedule/></Admin>} />
+                        <Route path="/admin/counselors" element={<Admin><AdminCounselor/></Admin>} />
                     </Route>
 
                     {/* 카카오페이 관련 */}

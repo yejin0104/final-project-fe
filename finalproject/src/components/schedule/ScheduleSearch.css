@@ -1,0 +1,90 @@
+/* 검색 컨테이너 전체 */
+.search-container {
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+/* 검색창 그룹 */
+.item-group .form-control {
+    border-radius: 12px 0 0 12px;
+    border: 1px solid #e0e0e0;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+}
+
+.item-group .form-control:focus {
+    box-shadow: none;
+    border-color: #86C9BB; /* 관리자 페이지 포인트 컬러 */
+}
+
+.item-group .input-group-text {
+    border-radius: 0 12px 12px 0;
+    background-color: #86C9BB;
+    color: white;
+    border: none;
+    padding: 0 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.item-group .input-group-text:hover {
+    background-color: #6fb3a5;
+}
+
+/* 검색 결과 리스트 영역 */
+.search-results {
+    max-height: 600px; /* 높이 제한 및 스크롤 */
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+/* 장소 아이템 개별 카드 */
+.result-item-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.2rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid #eee !important;
+}
+
+.result-item-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.08) !important;
+    border-color: #86C9BB !important;
+}
+
+.result-item-card p {
+    margin-bottom: 0.3rem;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+/* 강조 텍스트 */
+.place-name {
+    font-size: 1.05rem !important;
+    font-weight: 700;
+    color: #333 !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.category-badge {
+    display: inline-block;
+    background: #f0fdfa;
+    color: #86C9BB;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+/* 스크롤바 커스텀 */
+.search-results::-webkit-scrollbar {
+    width: 6px;
+}
+.search-results::-webkit-scrollbar-thumb {
+    background: #e0e0e0;
+    border-radius: 10px;
+}

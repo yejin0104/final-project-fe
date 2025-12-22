@@ -29,7 +29,8 @@
   position: absolute;
   top: 10px;
   left: 10px;
-  width: 340px;
+  width: 400px;
+  height: 95%;
   background: white;
   border-radius: 10px;
   padding: 10px;
@@ -183,7 +184,7 @@ border: 2px solid #dee2e6;
 }
 
 .all-schedule-container, .search-results {
-  height: 750px;
+  position: relative;
   overflow: scroll;
 }
 /* ===== Reply (JSX 수정 없이 적용) ===== */
@@ -844,4 +845,84 @@ textarea.form-control,
 /* 댓글 영역 래퍼 */
 .reply-card-wrap{
   background: transparent;
+}
+
+/* 전체 레이아웃 세팅 */
+.schedule-main-container {
+    background-color: #ffffff;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* 탭 버튼 스타일 (리스트 보기 / 장소 검색) */
+.tab-group .btn {
+    border-radius: 10px;
+    padding: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: 1px solid #86C9BB;
+}
+
+.tab-active {
+    background-color: #86C9BB !important;
+    color: white !important;
+    border-color: #86C9BB !important;
+}
+
+.tab-inactive {
+    background-color: transparent !important;
+    color: #86C9BB !important;
+}
+
+/* 제목 및 날씨 섹션 */
+.schedule-header {
+    background: #f8fafb;
+    border-radius: 12px;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.weather-icon {
+    color: #ffb800;
+    margin-right: 10px;
+    font-size: 1.8rem;
+}
+
+.schedule-title {
+    font-weight: 700;
+    color: #333;
+    margin: 0 10px;
+}
+
+/* 선택 버튼 공통 (자동차/도보, 경로 옵션) */
+.option-group-label {
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.btn-option {
+    border-radius: 8px;
+    font-size: 0.85rem;
+    padding: 6px 15px;
+    margin: 0 4px;
+    border: 1px solid #eee;
+    background-color: #fff;
+    color: #666;
+    transition: all 0.2s ease;
+}
+
+.btn-option.active {
+    background-color: #86C9BB !important;
+    color: white !important;
+    border-color: #86C9BB !important;
+    box-shadow: 0 3px 10px rgba(134, 201, 187, 0.3);
+}
+
+.btn-option:hover:not(.active) {
+    background-color: #f0fdfa;
+    border-color: #86C9BB;
+    color: #86C9BB;
 }
