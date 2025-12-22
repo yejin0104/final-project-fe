@@ -227,6 +227,11 @@ export default function Menu() {
                   <CiMap style={{ fontSize: "1.2rem" }} /> 추천 일정
                 </Link>
               </li>
+              <li className="nav-item" onClick={closeMenu}>
+                <Link className="nav-link" to="/kakaopay/buy" style={styles.navLink}>
+                  <CiMap style={{ fontSize: "1.2rem" }} /> 결제
+                </Link>
+              </li>
             </ul>
 
             {/* --- Right Side Actions --- */}
