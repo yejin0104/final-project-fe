@@ -50,7 +50,7 @@ export default function AccountLogin() {
 
         try {
             // 백엔드 요청
-            const { data } = await axios.post("http://localhost:8080/account/login", account);
+            const { data } = await axios.post("http://192.168.20.16:8080/account/login", account);
 
             // 상태 업데이트
             setLoginId(data.loginId);

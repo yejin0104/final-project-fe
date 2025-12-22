@@ -15,7 +15,7 @@ export default function useChat() {
     closePopup(); // 팝업 닫기
     try {
       // 채팅방 생성 API 호출
-      const response = await axios.post("http://localhost:8080/chat", {});
+      const response = await axios.post("/chat", {});
       const newChatNo = response.data.chatNo;
 
       // 채팅방 번호 저장하고, 채팅방 열기

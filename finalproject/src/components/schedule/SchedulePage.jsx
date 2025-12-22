@@ -152,7 +152,6 @@ export default function SchedulePage() {
     }, [days, selectedDay]);
 
     const addTempMarker = useCallback((latlng) => {
-        if (!isOwner) return;
         setTempMarker(prev => ([
             ...prev,
             {
@@ -264,7 +263,6 @@ export default function SchedulePage() {
     }, [markerData, selectedDay, days]);
 
     const tempMarkerElements = useCallback(() => {
-        if (!isOwner) return;
         const handleMarkerClick = (clickedMarker) => {
             // 1. addMarker 함수 호출을 위한 customLatLng 객체 생성
             const customLatLng = {
@@ -448,7 +446,6 @@ export default function SchedulePage() {
     }, [days, markerData, selectedSearch, selectedType]);
     // 주소 검색
     const addMarkerForSearch = useCallback(async () => {
-        if (!isOwner) return;
         setSearchList([]);
         const { data } = await axios.post("/kakaoMap/searchAddress", searchData);
         // const {documents} = data;
@@ -508,8 +505,6 @@ export default function SchedulePage() {
     const routeHistory = useRef({});
 
     const loadData = useCallback(async () => {
-        console.log("loadData called with scheduleNo =", scheduleNo);
-        console.log("owner? ", isOwner);
         if (!scheduleNo) return;
         setIsLoading(true);
         try {

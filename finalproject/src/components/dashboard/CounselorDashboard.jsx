@@ -29,7 +29,7 @@ export default function CounselorDashboard() {
 
     const [history, setHistory] = useAtom(messageHistoryState);
 
-    
+
     const isLoggedIn = useAtomValue(loginState);
     const isCounselor = useAtomValue(counselorState);
 
@@ -88,10 +88,10 @@ export default function CounselorDashboard() {
             }
 
         } catch (error) {
-           if (error.response?.status === 403) {
-            toast.error("상담사 전용 페이지입니다. 권한이 없습니다.", { toastId: "authError" });
-            navigate("/unauthorized");
-        }
+            if (error.response?.status === 403) {
+                toast.error("상담사 전용 페이지입니다. 권한이 없습니다.", { toastId: "authError" });
+                navigate("/unauthorized");
+            }
         } finally {
             setIsLoading(false);
         }
@@ -113,20 +113,20 @@ export default function CounselorDashboard() {
 
     //새로고침 후 채팅방 복구
     useEffect(() => {
-        if(room.length === 0) return;
+        if (room.length === 0) return;
 
         const saveRoomId = sessionStorage.getItem("activeChatRoomId");
-        if(!saveRoomId) return;
+        if (!saveRoomId) return;
 
         const saveId = Number(saveRoomId);
 
-        const reRoom = room.find(r => 
-            r.id === saveId && 
-            r.status === 'ACTIVE' && 
+        const reRoom = room.find(r =>
+            r.id === saveId &&
+            r.status === 'ACTIVE' &&
             r.chatId === loginId
         );
 
-        if(reRoom) {
+        if (reRoom) {
             setSelectedRoomId(saveId);
         }
         else {
@@ -138,7 +138,7 @@ export default function CounselorDashboard() {
     useEffect(() => {
         if (!accessToken) return;
 
-        const socket = new SockJS("http://localhost:8080/ws");
+        const socket = new SockJS(import.meta.env.VITE_WEBSOCKET_URL);
         const client = new Client({
             webSocketFactory: () => socket,
             connectHeaders: {
@@ -204,27 +204,27 @@ export default function CounselorDashboard() {
     }, [room, selectedRoomId]);
 
     const updateChatStatus = async (chatNo, newStatus) => {
-    if (!accessToken) return;
-    const token = accessToken.replace(/"/g, '');
+        if (!accessToken) return;
+        const token = accessToken.replace(/"/g, '');
 
-    try {
-        const response = await axios.post(
-            `${API_URL}/status`,
-            { chatNo, chatStatus: newStatus },
-            {
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json",
+        try {
+            const response = await axios.post(
+                `${API_URL}/status`,
+                { chatNo, chatStatus: newStatus },
+                {
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    }
                 }
-            }
-        );
+            );
 
-        return response;
-    } catch (error) {
-        console.error("상태 변경 실패:", error);
-        throw error;
-    }
-};
+            return response;
+        } catch (error) {
+            console.error("상태 변경 실패:", error);
+            throw error;
+        }
+    };
 
     const handleRoomClick = (id) => {
         const clickedRoom = room.find(r => r.id === id);
@@ -248,12 +248,12 @@ export default function CounselorDashboard() {
     const handleSendMessage = () => {
         // 로그를 추가하여 함수 호출 여부 확인
         console.log("전송 버튼 클릭됨, 입력값:", inputText);
-        
+
         if (!inputText.trim() || !selectedRoomId || !stompClientRef.current) {
-            console.error("전송 불가 상태:", { 
-                text: !!inputText.trim(), 
-                room: !!selectedRoomId, 
-                client: !!stompClientRef.current 
+            console.error("전송 불가 상태:", {
+                text: !!inputText.trim(),
+                room: !!selectedRoomId,
+                client: !!stompClientRef.current
             });
             return;
         }
@@ -276,7 +276,7 @@ export default function CounselorDashboard() {
 
         console.log("메시지 전송 완료:", payload);
         setInputText("");
-};
+    };
 
 
     const handleKeyDown = (e) => {
@@ -298,7 +298,7 @@ export default function CounselorDashboard() {
     const currentMessages = messages[selectedRoomId] || [];
 
     useEffect(() => {
-        if (messagesEndRef.current) { 
+        if (messagesEndRef.current) {
             const container = messagesEndRef.current;
             container.scrollTop = container.scrollHeight;
         }
@@ -331,7 +331,7 @@ export default function CounselorDashboard() {
                         const badge = getBadgeStyle(room.status);
 
                         return (
-                            <div key={room.id} onClick={() => handleRoomClick(room.id)} 
+                            <div key={room.id} onClick={() => handleRoomClick(room.id)}
                                 style={{
                                     ...styles.roomItem,
                                     backgroundColor: selectedRoomId === room.id ? '#e6f7ff' : 'white',
@@ -376,13 +376,13 @@ export default function CounselorDashboard() {
                                     <span style={styles.closedBadge}>상담 종료됨</span>
                                 )}
                             </div>
-                            
+
                             <div style={styles.messageArea} ref={messagesEndRef}>
                                 {(messages[selectedRoomId] || []).map((msg, i) => {
-                                    
+
                                     // 백엔드 로그 기준: 전송 시 messageSender에 loginId를 담아 보냈으므로 확인
                                     console.log("Received message");
-                                    const sender = msg.messageSender || msg.loginId; 
+                                    const sender = msg.messageSender || msg.loginId;
                                     const isMyMessage = sender === loginId;
                                     console.log("Message sender:", sender, "Is my message:", isMyMessage);
                                     return (

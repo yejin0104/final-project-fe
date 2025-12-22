@@ -89,7 +89,7 @@ export default function ChatSocket({ isChatOpen, onChatClose, currentChatNo }) {
 
     const checkParty = useCallback(async () => {
         try {
-            const { data } = await axios.post("http://localhost:8080/chat/check", { chatNo: chatNo });
+            const { data } = await axios.post("http://192.168.20.16:8080/chat/check", { chatNo: chatNo });
 
             if (data.result === false) {
                 setCheckComplete(false);
@@ -124,7 +124,7 @@ export default function ChatSocket({ isChatOpen, onChatClose, currentChatNo }) {
         setWsConnectionState("connecting"); // 💡 연결 시도 시작 시 상태 변경
 
         // const socket = new SockJS(import.meta.env.VITE_WEBSOCKET_URL);
-        const socket = new SockJS("http://localhost:8080/ws");
+        const socket = new SockJS(import.meta.env.VITE_WEBSOCKET_URL);
         const client = new Client({
             webSocketFactory: () => socket,
             connectHeaders: {

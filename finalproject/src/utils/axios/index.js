@@ -7,7 +7,7 @@ import { accessTokenState, clearLoginState, refreshTokenState } from "../jotai";
 const store = getDefaultStore();
 
 // axios setting
-axios.defaults.baseURL = "http://localhost:8080";
+axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 // axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 axios.defaults.timeout = 10000;
 
