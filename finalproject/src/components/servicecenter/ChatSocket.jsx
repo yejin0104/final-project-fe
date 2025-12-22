@@ -33,6 +33,8 @@ export default function ChatSocket({ isChatOpen, onChatClose, currentChatNo }) {
     const [history, setHistory] = useState([]);
     const [last, setLast] = useState(null);
 
+    const stompClientRef = useRef(null);
+
     // --- 메시지 업데이트 로직 함수화 ---
     const updateMessages = useCallback((messageData) => {
         const currentChatId = String(chatNo);
@@ -61,17 +63,17 @@ export default function ChatSocket({ isChatOpen, onChatClose, currentChatNo }) {
     const handleSend = useCallback(() => {
         console.log("handleSend 호출됨");
         if (client && wsConnectionState === 'connected' && input.trim() !== '') {
+
             const messageToSend = {
-                sender: loginId,
+                messageSender: loginId,
                 chatNo: chatNo,
-                type: 'TALK',
+                messageType: 'TALK',
                 content: input.trim(),
-                // 기타 필요한 데이터 (예: token, time 등)
-            };
+            }
 
             // STOMP 클라이언트를 사용하여 메시지 발행 (Publish)
             client.publish({
-                destination: `/app/message/${chatNo}`, // 서버의 수신 경로
+                destination: `/app/message/${chatNo}`,
                 body: JSON.stringify(messageToSend),
                 headers: {
                     'content-type': 'application/json',
@@ -83,7 +85,7 @@ export default function ChatSocket({ isChatOpen, onChatClose, currentChatNo }) {
 
             setInput(""); // 입력창 초기화
         }
-    }, [client, wsConnectionState, input, loginId, chatNo, setInput]);
+    }, [client, wsConnectionState, input, loginId, chatNo, setInput, accessToken, refreshToken]);
 
     const checkParty = useCallback(async () => {
         try {
@@ -106,6 +108,7 @@ export default function ChatSocket({ isChatOpen, onChatClose, currentChatNo }) {
         const  {data} =await axios.get(`/message/messageOrigin/${chatNo}`);
         setHistory(data.message);
         setLast(data.last);
+        console.log("1");
     }, []);
     const loadMoreHistory = useCallback(async ()=>{
         const lastMessage = history.at(-1);
@@ -114,6 +117,7 @@ export default function ChatSocket({ isChatOpen, onChatClose, currentChatNo }) {
         setHistory(prev=>[...prev, ...data.message]);
         setLast(data.last);
         moveScrollBottom();
+        console.log("2")
     }, [history]);
 
     const connectToServer = useCallback(() => {
@@ -133,7 +137,7 @@ export default function ChatSocket({ isChatOpen, onChatClose, currentChatNo }) {
 
                 client.subscribe(`/public/message/${chatNo}`, (message) => {
                     const json = JSON.parse(message.body);
-                    updateMessages(json); // Jotai 상태 업데이트
+                    //updateMessages(json); // Jotai 상태 업데이트
                     setHistory(prev => [...prev, json]); // 로컬 history 업데이트
                 });
 
@@ -148,12 +152,12 @@ export default function ChatSocket({ isChatOpen, onChatClose, currentChatNo }) {
                     //문자열 형태의 데이터를 JavaScript 객체로 변환하는 작업
                     //body : 서버가 클라이언트(React 앱)에게 보낸 메시지 내용의 핵심 부분
                     const json = JSON.parse(message.body);
-                    updateMessages(json); // 업데이트 함수 호출
+                    //updateMessages(json); // 업데이트 함수 호출
                     setHistory(prev => [...prev, json]);
                 });
                 client.subscribe(`/public/message/${chatNo}/system`, (message) => {
                     const json = JSON.parse(message.body);
-                    updateMessages(json); // 업데이트 함수 호출
+                    //updateMessages(json); // 업데이트 함수 호출
                     setHistory(prev => [...prev, json]);
                 });
             },
@@ -170,12 +174,11 @@ export default function ChatSocket({ isChatOpen, onChatClose, currentChatNo }) {
                 setWsConnectionState("disconnected");
             },
 
-            debug: (str) => console.log(str),
         });
         client.activate();
 
         return client;
-    }, [loginId, accessToken, refreshToken, setWsConnectionState, chatNo, updateMessages]);
+    }, [loginId, accessToken, refreshToken, setWsConnectionState, chatNo]);
 
     const disconnectFromServer = useCallback((client) => {
         if (client) {
@@ -275,7 +278,7 @@ export default function ChatSocket({ isChatOpen, onChatClose, currentChatNo }) {
 
                             <div className="p-3 flex-grow-1">
                                 {/* 2. 상담사 대기 문구 (상담사가 보낸 TALK 메시지가 없을 때만 표시) */}
-                                {history.filter(m => (m.type === 'TALK' || m.messageType === 'TALK') && (m.sender !== loginId && m.messageSender !== loginId)).length === 0 && (
+                                {history.filter(m => (m.messageType === 'TALK') && (m.messageSender !== loginId)).length === 0 && (
                                     <div className="alert alert-light text-center small mb-3 border">
                                         상담사가 입장 전입니다. 메시지를 남겨주시면 곧 연결해 드리겠습니다.
                                     </div>
@@ -284,12 +287,14 @@ export default function ChatSocket({ isChatOpen, onChatClose, currentChatNo }) {
                                 {/* 3. 통합 메시지 출력 */}
                                 {history.map((m, index) => {
                                     // 내 메시지인지 확인 (실시간 sender 또는 DB messageSender)
-                                    const isMyMsg = (m.sender === loginId || m.messageSender === loginId);
-                                    const senderName = m.sender || m.messageSender;
-                                    const content = m.text || m.messageContent; // text 필드와 messageContent 필드 모두 대응
+                                    const isMyMsg = (m.messageSender === loginId);
+                                    // const senderName = m.sender || m.messageSender;
+                                    // const content = m.text || m.messageContent; // text 필드와 messageContent 필드 모두 대응
+                                    const senderName = m.messageSender;
+                                    const content = m.messageContent;
 
                                     // 일반 채팅 (TALK)
-                                    if (m.type === "TALK" || m.messageType === "TALK") {
+                                    if (m.messageType === "TALK") {
                                         return (
                                             <div key={index} className={`d-flex mb-3 ${isMyMsg ? 'justify-content-end' : 'justify-content-start'}`}>
                                                 <div className={`p-2 rounded ${isMyMsg ? 'bg-info text-white' : 'bg-light border'}`} style={{ maxWidth: '80%' }}>
@@ -326,7 +331,7 @@ export default function ChatSocket({ isChatOpen, onChatClose, currentChatNo }) {
                             <div className="input-group">
                                 <input type="text" className="form-control" value={input}
                                     onChange={(e) => setInput(e.target.value)}
-                                    onKeyDown={(e) => {if (e.key === 'Enter') {handleSend();}}}
+                                    // onKeyDown={(e) => {if (e.key === 'Enter') {handleSend();}}}
                                     placeholder="메시지를 입력하세요..."
                                     disabled={wsConnectionState !== 'connected'} />
                                 <button className="btn btn-success" onClick={handleSend}

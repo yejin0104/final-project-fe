@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAtom, useAtomValue } from "jotai";
 import { accessTokenState, counselorState, loginIdState, loginLevelState, loginState, messageHistoryState, refreshTokenState } from "../../utils/jotai";
 import { toast } from "react-toastify";
+import SockJS from "sockjs-client";
+import { Client } from "@stomp/stompjs";
 
 const API_URL = '/chat';
 
@@ -30,6 +32,9 @@ export default function CounselorDashboard() {
     
     const isLoggedIn = useAtomValue(loginState);
     const isCounselor = useAtomValue(counselorState);
+
+    const stompClientRef = useRef(null);
+    const subscriptionRef = useRef(null);
 
     // useEffect(() => {
     //     if (checkedAuth) return;
@@ -150,11 +155,63 @@ export default function CounselorDashboard() {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, selectedRoomId]);
 
-    // useEffect(() => {
-    //     if (selectedRoomId && !room.some(r => r.id === selectedRoomId)) {
-    //         setSelectedRoomId(null);
-    //     }
-    // }, [room]);
+    // 1. 최초 1회 연결
+    useEffect(() => {
+        if (!accessToken) return;
+
+        const socket = new SockJS("http://localhost:8080/ws");
+        const client = new Client({
+            webSocketFactory: () => socket,
+            connectHeaders: {
+                accessToken: `Bearer ${accessToken}`,
+                refreshToken: `Bearer ${refreshToken}`,
+            },
+            onConnect: () => {
+                console.log("STOMP 연결 완료");
+            }
+        });
+
+        client.activate();
+        stompClientRef.current = client;
+
+        return () => {
+            client.deactivate();
+            stompClientRef.current = null;
+        };
+    }, [accessToken, refreshToken]);
+
+    useEffect(() => {
+        console.log("Subscribing to room:", selectedRoomId);
+        if (
+            !stompClientRef.current ||
+            !stompClientRef.current.connected ||
+            !selectedRoomId
+        ) return;
+
+        subscriptionRef.current?.unsubscribe();
+
+        subscriptionRef.current =
+            stompClientRef.current.subscribe(
+                `/public/message/${selectedRoomId}`,
+                (msg) => {
+                    const json = JSON.parse(msg.body);
+
+                    setMessages(prev => ({
+                        ...prev,
+                        [selectedRoomId]: [
+                            ...(prev[selectedRoomId] || []),
+                            json
+                        ]
+                    }));
+                }
+            );
+
+        return () => {
+            subscriptionRef.current?.unsubscribe();
+            subscriptionRef.current = null;
+        };
+    }, [selectedRoomId]);
+
 
     useEffect(() => {
         if (!selectedRoomId) return;
@@ -243,22 +300,56 @@ export default function CounselorDashboard() {
         }
     };
 
-    const handleSendMessage = () => {
-        if (!inputText.trim() || !selectedRoomId) return;
+    // const handleSendMessage = () => {
+    //     if (!inputText.trim() || !selectedRoomId) return;
 
-        const newMessage = {
-            sender: 'me',
-            text: inputText,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    //     const newMessage = {
+    //         sender: 'me',
+    //         text: inputText,
+    //         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    //     };
+
+    //     setMessages(prev => ({
+    //         ...prev,
+    //         [selectedRoomId]: [...(prev[selectedRoomId] || []), newMessage]
+    //     }));
+
+    //     setInputText("");
+    // };
+
+    const handleSendMessage = () => {
+        // 로그를 추가하여 함수 호출 여부 확인
+        console.log("전송 버튼 클릭됨, 입력값:", inputText);
+        
+        if (!inputText.trim() || !selectedRoomId || !stompClientRef.current) {
+            console.error("전송 불가 상태:", { 
+                text: !!inputText.trim(), 
+                room: !!selectedRoomId, 
+                client: !!stompClientRef.current 
+            });
+            return;
+        }
+
+        const payload = {
+            messageSender: loginId,
+            chatNo: selectedRoomId,
+            messageType: "TALK",
+            content: inputText,
         };
 
-        setMessages(prev => ({
-            ...prev,
-            [selectedRoomId]: [...(prev[selectedRoomId] || []), newMessage]
-        }));
+        stompClientRef.current.publish({
+            destination: `/app/message/${selectedRoomId}`,
+            headers: {
+                accessToken: `Bearer ${accessToken}`,
+                refreshToken: `Bearer ${refreshToken}`,
+            },
+            body: JSON.stringify(payload)
+        });
 
+        console.log("메시지 전송 완료:", payload);
         setInputText("");
-    };
+};
+
 
     const handleKeyDown = (e) => {
         if (e.key === "Enter") handleSendMessage();
@@ -352,24 +443,34 @@ export default function CounselorDashboard() {
                             </div>
 
                             <div style={styles.messageArea}>
-                                {(currentMessages || []).map((msg, i) => (
-                                    <div
-                                        key={i}
-                                        style={{
+                                {(messages[selectedRoomId] || []).map((msg, i) => {
+                                    // 백엔드 로그 기준: 전송 시 messageSender에 loginId를 담아 보냈으므로 확인
+                                    console.log("Received message");
+                                    const sender = msg.messageSender || msg.loginId; 
+                                    const isMyMessage = sender === loginId;
+                                    console.log("Message sender:", sender, "Is my message:", isMyMessage);
+                                    return (
+                                        <div key={i} style={{
                                             ...styles.messageRow,
-                                            justifyContent: msg.sender === 'me' ? 'flex-end' : 'flex-start'
-                                        }}
-                                    >
-                                        <div style={{
-                                            ...styles.messageBubble,
-                                            backgroundColor: msg.sender === 'me' ? '#1890ff' : '#f0f0f0',
-                                            color: msg.sender === 'me' ? 'white' : 'black',
+                                            justifyContent: isMyMessage ? 'flex-end' : 'flex-start',
+                                            display: 'flex',
+                                            margin: '10px 0'
                                         }}>
-                                            {msg.text}
+                                            <div style={{
+                                                ...styles.messageBubble,
+                                                backgroundColor: isMyMessage ? '#1890ff' : '#f0f0f0',
+                                                color: isMyMessage ? 'white' : 'black',
+                                                alignSelf: isMyMessage ? 'flex-end' : 'flex-start',
+                                                borderRadius: '12px',
+                                                padding: '8px 15px',
+                                                maxWidth: '70%'
+                                            }}>
+                                                {/* content와 messageContent 둘 다 대응 */}
+                                                {msg.content || msg.messageContent}
+                                            </div>
                                         </div>
-                                        <span style={styles.timeText}>{msg.time}</span>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                                 <div ref={messagesEndRef} />
                             </div>
 
