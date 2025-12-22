@@ -8,10 +8,10 @@ import { TiDelete } from "react-icons/ti";
 import { useAtomValue } from "jotai";
 import { accessTokenState, loginIdState, loginLevelState } from "../../utils/jotai";
 
-export default function Review() {
+export default function Review({reviews = [], loadReviews}) {
 
     const [input, setInput] = useState("");
-    const [replyList, setReplyList] = useState([]);
+    // const [replyList, setReplyList] = useState([]);
     const [accountName, setAccountName] = useState("");
     const [time, setTime] = useState(null);
     const [scheduleUnitNo, setScheduleUnitNo] = useState("");
@@ -40,9 +40,9 @@ export default function Review() {
 
         try {
             // 1) 댓글 리스트
-            const { data } = await axios.get(`/review/list/${scheduleNo}`);
-            console.log("댓글데이터확인=", data);
-            setReplyList(data);
+            // const { data } = await axios.get(`/review/list/${scheduleNo}`);
+            // console.log("댓글데이터확인=", data);
+            // setReplyList(data);
 
             // 2) 대표 일정의 세부일정 리스트(객체 리스트)
             const { data: unitData } = await axios.get(`/review/unit/list/${scheduleNo}`);
@@ -73,6 +73,7 @@ export default function Review() {
                 {
                     scheduleNo: Number(scheduleNo),
                     scheduleUnitList: scheduleUnitList,
+                    reviewType: "후기",
                     reviewContent: input,
                 },
                 {
@@ -85,6 +86,7 @@ export default function Review() {
             console.log("댓글데이터 확인 ", data);
             setAccountName(data.reviewWriterNickname);
             loadData();
+           await loadReviews?.();
             setScheduleUnitList([]);
 
         } catch (error) {
@@ -92,7 +94,7 @@ export default function Review() {
             toast.error("댓글 등록 실패");
         }
 
-    }, [scheduleNo, scheduleUnitList, input, replyList])
+    }, [scheduleNo, scheduleUnitList, input])
 
     const deleteScheduleUnitNo = useCallback(async (reviewNo, scheduleUnitNo) => {
         try {
@@ -100,7 +102,7 @@ export default function Review() {
                 params: { scheduleUnitNo }
             });
             console.log(scheduleUnitNo);
-            loadData();
+            await loadReviews?.();
             toast.success("성공");
 
         } catch (error) {
@@ -123,6 +125,7 @@ export default function Review() {
         });
         setEditReviewNo(null);
         loadData();
+        await loadReviews?.();
         loadReviewUnitList();
 
     }, [editReply]);
@@ -153,6 +156,7 @@ export default function Review() {
                     icon: "success"
                 });
                 await axios.delete(`/review/${reply.reviewNo}`);
+                await loadReviews?.(); 
 
             }
             loadData();
@@ -172,14 +176,14 @@ const canEdit = (reply) =>
                     {/* 헤더 */}
                     <div className="reply-topbar-v3">
                         <div className="reply-title-v3"> 공개용 댓글</div>
-                        <div className="reply-count-v3">{replyList.length}개</div>
+                        <div className="reply-count-v3">{reviews.length}개</div>
                     </div>
 
                     <div className="reply-divider-v3" />
 
                     {/* 리스트 */}
                     <div className="reply-list-v3">
-                        {replyList.map((reply, index) => (
+                        {reviews.map((reply, index) => (
                             <div className="reply-card-v3" key={reply.reviewNo}>
                                 {/* 카드 헤더: 프로필/닉네임/시간 + 액션 */}
                                 <div className="reply-card-head-v3">

@@ -10,10 +10,10 @@ import { accessTokenState, guestKeyState, guestState, loginIdState, loginLevelSt
 import { guestNicknameState } from "../../../../test-kakaopay/src/utils/jotai";
 
 
-export default function Reply({ memberList = [] }) {
+export default function Reply({  reviews = [], memberList = [], loadReviews}) {
 
     const [input, setInput] = useState("");
-    const [replyList, setReplyList] = useState([]);
+    // const [replyList, setReplyList] = useState([]);
     const [accountName, setAccountName] = useState("");
     const [time, setTime] = useState(null);
     const [scheduleUnitNo, setScheduleUnitNo] = useState("");
@@ -50,15 +50,15 @@ console.log("리스트확인",memberList);
 
         try {
             // 1) 댓글 리스트
-            const { data } = await axios.get(`/review/list/${scheduleNo}`);
-            console.log("댓글데이터확인=", data);
-            setReplyList(data);
+            // const { data } = await axios.get(`/review/list/${scheduleNo}`);
+            // console.log("댓글데이터확인=", data);
+            // setReplyList(data);
 
             // 2) 대표 일정의 세부일정 리스트(객체 리스트)
             const { data: unitData } = await axios.get(`/review/unit/list/${scheduleNo}`);
             console.log("대표일정 세부일정확인=", unitData);
             setShowUnitList(unitData);
-
+            loadReviews();
         } catch (error) {
             console.log(error);
         }
@@ -83,6 +83,7 @@ console.log("리스트확인",memberList);
                 {
                     scheduleNo: Number(scheduleNo),
                     scheduleUnitList: scheduleUnitList,
+                    reviewType: "댓글",
                     reviewContent: input,
                 },
                 {
@@ -102,7 +103,7 @@ console.log("리스트확인",memberList);
             toast.error("댓글 등록 실패");
         }
 
-    }, [scheduleNo, scheduleUnitList, input, replyList])
+    }, [scheduleNo, scheduleUnitList, input])
 
     const deleteScheduleUnitNo = useCallback(async (reviewNo, scheduleUnitNo) => {
         try {
@@ -189,14 +190,14 @@ console.log("리스트확인",memberList);
                     {/* 헤더 */}
                     <div className="reply-topbar-v3">
                         <div className="reply-title-v3">댓글</div>
-                        <div className="reply-count-v3">{replyList.length}개</div>
+                        <div className="reply-count-v3">{reviews.length}개</div>
                     </div>
 
                     <div className="reply-divider-v3" />
 
                     {/* 리스트 */}
                     <div className="reply-list-v3">
-                        {replyList.map((reply, index) => (
+                        {reviews.map((reply, index) => (
                             <div className="reply-card-v3" key={reply.reviewNo}>
                                 {/* 카드 헤더: 프로필/닉네임/시간 + 액션 */}
                                 <div className="reply-card-head-v3">

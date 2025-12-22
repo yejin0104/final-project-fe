@@ -80,12 +80,10 @@ export default function ScheduleModal({ isOpen, onClose }) {
         formData.append("scheduleStartDate", dayjs(startDate).format("YYYY-MM-DDTHH:mm:ss"));
         if (checked) {
         formData.append("scheduleEndDate", dayjs(endDate).format("YYYY-MM-DDTHH:mm:ss"));}
-      
-         formData.append("tagNoList", selectTag);
-        // [추가] 공개 여부 전송
+        console.log("데이터 보냄!!!");
         formData.append("schedulePublic", schedulePublic);
         
-        formData.append("tagNoList", selectTag);
+         formData.append("tagNoList", selectTag);
 
         if (file) { // 파일이 있으면 전송 목록에 추가
             formData.append("attach", file);

@@ -729,21 +729,46 @@ export default function SchedulePage() {
     const loadReviews = useCallback(async () => {
         const { data } = await axios.get(`/review/list/${scheduleNo}`);
         setReviews(data);
+            console.log("댓글데이터확인",data);
+
     }, [scheduleNo]);
 
+    const deleteReview = async (reviewNo) => {
+  await axios.delete(`/review/${reviewNo}`);
+  await loadReviews(); 
+};
+
     useEffect(() => { loadReviews(); }, [loadReviews]);
+
+    const comments = reviews.filter(r => r.reviewType === "댓글");
+    const memberReviews = reviews.filter(r => r.reviewType === "멤버후기");
+    const publicReviews = reviews.filter(r => r.reviewType === "후기");
+
 
     const handleSubmit = async (payload) => {
         await axios.post(
             "/review/insert",
-            { scheduleNo: Number(scheduleNo), reviewContent: payload.reviewContent, scheduleUnitList: [] },
+            {
+                scheduleNo: Number(scheduleNo),
+                reviewContent: payload.reviewContent,
+                reviewType: "멤버후기",
+                scheduleUnitList: []
+            },
             { headers: { Authorization: `Bearer ${accessToken}` } }
         );
 
         await loadReviews();
     };
 
+    const canTogglePublic = scheduleDto.scheduleState === "종료";
     console.log("scheduleDto", scheduleDto);
+
+    const isBeforeOrOngoing =
+        scheduleDto.scheduleState === "약속전" ||
+        scheduleDto.scheduleState === "진행중";
+
+    const isEnded = scheduleDto.scheduleState === "종료";
+    const isPublic = !!scheduleDto.schedulePublic;
     return (
         <>
             <div className="container-fluid px-3 py-3 schedule-page">
@@ -757,14 +782,20 @@ export default function SchedulePage() {
 
                             {/* 상단 액션/정보 바 */}
                             <div className="panel-topbar">
+                                {!canTogglePublic && (
+                                    <div className="text-muted small mt-1">
+                                        약속 종료 후 공개 전환 가능
+                                    </div>
+                                )}
                                 <button
                                     type="button"
                                     className={`btn ${scheduleDto.schedulePublic ? "btn-success" : "btn-outline-secondary"} btn-sm`}
-                                    onClick={toggleSchedulePublicWithSwal}
+                                    onClick={toggleSchedulePublicWithSwal} disabled={!canTogglePublic}
 
                                 >
                                     {scheduleDto.schedulePublic ? "공개" : "비공개"}
                                 </button>
+
 
                                 {!guest && (
                                     <button type="button" className="btn btn-outline-secondary btn-sm" onClick={copyUrl}>
@@ -823,19 +854,24 @@ export default function SchedulePage() {
                 <div className="row mt-3">
                     <div className="col-12">
                         <div className="reply-card-wrap">
-                            {(scheduleDto.scheduleState === "약속전" ||
-                                scheduleDto.scheduleState === "진행중") && <Reply memberList={memberList} />}
+                            {isBeforeOrOngoing && (
+                                <Reply
+                                    reviews={comments}
+                                    memberList={memberList}
+                                     onDelete={deleteReview}
+                                />
+                            )}
 
-                            {scheduleDto.public === true || <Review />}
-
-                            {scheduleDto.scheduleState === "종료" && (
-                                scheduleDto.schedulePublic ? (
-                                    <Review />
+                            {isEnded && (
+                                isPublic ? (
+                                     <Review reviews={publicReviews}  onDelete={deleteReview} 
+                                     loadReviews={loadReviews}/>          // 공개후기
                                 ) : (
-                                    <MemberReview
-                                        reviews={reviews}
+                                    <MemberReview       // 멤버후기
+                                        reviews={memberReviews}
                                         canWrite={true}
                                         isGuest={guest}
+                                         onDelete={deleteReview}
                                         onSubmit={handleSubmit}
                                     />
                                 )

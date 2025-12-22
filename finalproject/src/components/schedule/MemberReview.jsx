@@ -8,20 +8,21 @@ export default function MemberReview({
   canWrite = true,
   isGuest = false,
   onSubmit,
+  loadReviews
 }) {
   const modalRef = useRef(null);
 
   const [content, setContent] = useState("");
   const [rating, setRating] = useState(5);
 
-  // ✅ ShareGate 방식: Modal.getOrCreateInstance(ref).show()
+  // ShareGate 방식: Modal.getOrCreateInstance(ref).show()
   const openModal = useCallback(() => {
     if (!modalRef.current) return;
     const instance = Modal.getOrCreateInstance(modalRef.current);
     instance.show();
   }, []);
 
-  // ✅ ShareGate 방식: getInstance() 없을 수도 있으니 안전하게
+  // ShareGate 방식: getInstance() 없을 수도 있으니 안전하게
   const closeModal = useCallback(() => {
     if (!modalRef.current) return;
     const instance =
