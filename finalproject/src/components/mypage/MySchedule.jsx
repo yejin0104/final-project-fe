@@ -192,7 +192,7 @@ export default function MySchedule() {
                             style={{ height: "100%", width: "100%", objectFit: "cover" }}
 
                             className="w-100 border shadow-sm"
-                            src={`http://localhost:8080/attachment/download/${s.scheduleImage}`
+                            src={`http://192.168.20.16:8080/attachment/download/${s.scheduleImage}`
 
                             } onError={(e) => {
                               "/images/default-schedule.png";
